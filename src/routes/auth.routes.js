@@ -14,31 +14,20 @@ const router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *                 minLength: 6
- *               userType:
- *                 type: string
- *                 enum: [cliente, comercio, admin]
- *                 default: cliente
+ *             $ref: '#/components/schemas/AuthRegisterRequest'
  *     responses:
  *       201:
  *         description: Usuário cadastrado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthRegisterResponse'
  *       400:
- *         description: Dados inválidos
+ *         $ref: '#/components/responses/BadRequest'
  *       409:
- *         description: E-mail já cadastrado
+ *         $ref: '#/components/responses/Conflict'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/register', authController.register);
 
@@ -53,23 +42,20 @@ router.post('/register', authController.register);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
+ *             $ref: '#/components/schemas/AuthLoginRequest'
  *     responses:
  *       200:
  *         description: Login realizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthSuccessResponse'
  *       400:
- *         description: Dados inválidos
+ *         $ref: '#/components/responses/BadRequest'
  *       401:
- *         description: Credenciais inválidas
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/login', authController.login);
 
