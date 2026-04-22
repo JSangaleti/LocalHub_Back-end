@@ -32,7 +32,7 @@ Este projeto utiliza as seguintes tecnologias:
 1. Clone o repositório  
 	```sh
 	git clone <url-do-repositorio>
-	cd backend
+	cd LocalHub_Back-end
 	```
 2. Instale as dependências  
 	```sh
@@ -49,7 +49,6 @@ Este projeto utiliza as seguintes tecnologias:
 	DB_PASSWORD=postgres
 	DB_NAME=localhubdb
 	```
-	> No caso, há um *template* para `.env` já existente como `.env.example`
 4. Suba o banco de dados com Docker Compose  
 	```sh
 	docker compose up -d
@@ -74,22 +73,11 @@ Os arquivos de modelagem ficam em `src/database`:
 
 Scripts disponíveis:
 
-- `npm run db:schema` → aplica apenas a modelagem;
-- `npm run db:migrate` → aplica apenas as migrations pendentes;
-- `npm run db:seed` → aplica apenas dados iniciais;
-- `npm run db:init` → aplica migrations + seed.
+- `npm run db:schema`: aplica apenas a modelagem;
+- `npm run db:migrate`: aplica apenas as migrations pendentes;
+- `npm run db:seed`: aplica apenas dados iniciais;
+- `npm run db:init`: aplica migrations + seed.
 
-## Endpoints iniciais implementados
+## End-points iniciais implementados
 
-- `POST /api/auth/register` → cadastro de usuário;
-- `POST /api/auth/login` → login;
-- `GET /api/users` → listagem de usuários;
-- `GET /api/stores` → listagem de lojas;
-- `POST /api/stores` → cadastro de loja;
-- `GET /api/stores/:id` → detalhamento de loja;
-- `PUT /api/stores/:id` → atualização de loja;
-- `DELETE /api/stores/:id` → remoção de loja;
-- `GET /api/categories` → listagem de categorias.
-
-Todos os endpoints acima estão documentados no Swagger em `/docs`.
-
+Todos os *end-points* estão documentados no Swagger em `localhost:3000/docs`.
