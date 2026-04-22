@@ -32,7 +32,7 @@ Este projeto utiliza as seguintes tecnologias:
 1. Clone o repositório  
 	```sh
 	git clone <url-do-repositorio>
-	cd backend
+	cd LocalHub_Back-end
 	```
 2. Instale as dependências  
 	```sh
@@ -49,13 +49,35 @@ Este projeto utiliza as seguintes tecnologias:
 	DB_PASSWORD=postgres
 	DB_NAME=localhubdb
 	```
-	> No caso, há um *template* para `.env` já existente como `.env.example`
 4. Suba o banco de dados com Docker Compose  
 	```sh
 	docker compose up -d
 	```
-5. Inicie o servidor  
+5. Aplique a modelagem e carga inicial no banco
+	```sh
+	npm run db:init
+	```
+6. Inicie o servidor  
 	```sh
 	npm run dev
 	```
 
+## Modelagem do banco de dados
+
+Os arquivos de modelagem ficam em `src/database`:
+
+- `schema.sql`: estrutura relacional (`users`, `stores`, `categories`, `posts`), índices, triggers e view `v_feed_posts`;
+- `seed.sql`: dados iniciais para ambiente local;
+- `migrations/*.sql`: migrations versionadas da estrutura do banco;
+- `run-sql.js`: executor para aplicar schema/seed usando as variáveis de ambiente do projeto.
+
+Scripts disponíveis:
+
+- `npm run db:schema`: aplica apenas a modelagem;
+- `npm run db:migrate`: aplica apenas as migrations pendentes;
+- `npm run db:seed`: aplica apenas dados iniciais;
+- `npm run db:init`: aplica migrations + seed.
+
+## End-points iniciais implementados
+
+Todos os *end-points* estão documentados no Swagger em `localhost:3000/docs`.
