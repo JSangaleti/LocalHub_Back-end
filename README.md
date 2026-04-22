@@ -54,8 +54,42 @@ Este projeto utiliza as seguintes tecnologias:
 	```sh
 	docker compose up -d
 	```
-5. Inicie o servidor  
+5. Aplique a modelagem e carga inicial no banco
+	```sh
+	npm run db:init
+	```
+6. Inicie o servidor  
 	```sh
 	npm run dev
 	```
+
+## Modelagem do banco de dados
+
+Os arquivos de modelagem ficam em `src/database`:
+
+- `schema.sql`: estrutura relacional (`users`, `stores`, `categories`, `posts`), índices, triggers e view `v_feed_posts`;
+- `seed.sql`: dados iniciais para ambiente local;
+- `migrations/*.sql`: migrations versionadas da estrutura do banco;
+- `run-sql.js`: executor para aplicar schema/seed usando as variáveis de ambiente do projeto.
+
+Scripts disponíveis:
+
+- `npm run db:schema` → aplica apenas a modelagem;
+- `npm run db:migrate` → aplica apenas as migrations pendentes;
+- `npm run db:seed` → aplica apenas dados iniciais;
+- `npm run db:init` → aplica migrations + seed.
+
+## Endpoints iniciais implementados
+
+- `POST /api/auth/register` → cadastro de usuário;
+- `POST /api/auth/login` → login;
+- `GET /api/users` → listagem de usuários;
+- `GET /api/stores` → listagem de lojas;
+- `POST /api/stores` → cadastro de loja;
+- `GET /api/stores/:id` → detalhamento de loja;
+- `PUT /api/stores/:id` → atualização de loja;
+- `DELETE /api/stores/:id` → remoção de loja;
+- `GET /api/categories` → listagem de categorias.
+
+Todos os endpoints acima estão documentados no Swagger em `/docs`.
 
