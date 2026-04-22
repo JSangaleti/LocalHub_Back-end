@@ -5,19 +5,27 @@ const router = Router();
 
 /**
  * @swagger
- * /api/stores/{id}:
- *   get:
- *     summary: Busca os dados de uma loja pelo ID
+ * /api/stores:
+ *   post:
+ *     summary: Cadastra uma nova loja
  *     tags: [Stores]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/StoreCreateRequest'
  *     responses:
- *       200:
- *         description: Loja encontrada com sucesso
+ *       201:
+ *         description: Loja cadastrada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StoreResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/:id', storesController.getById);
 

@@ -14,25 +14,20 @@ const router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - userType
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               userType:
- *                 type: string
- *                 example: cliente
+ *             $ref: '#/components/schemas/AuthRegisterRequest'
  *     responses:
  *       201:
  *         description: Usuário cadastrado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthRegisterResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       409:
+ *         $ref: '#/components/responses/Conflict'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/register', authController.register);
 
@@ -47,18 +42,20 @@ router.post('/register', authController.register);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
+ *             $ref: '#/components/schemas/AuthLoginRequest'
  *     responses:
  *       200:
  *         description: Login realizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthSuccessResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/login', authController.login);
 
