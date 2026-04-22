@@ -83,7 +83,12 @@ Scripts disponíveis:
 
 - `POST /api/auth/register` → cadastro de usuário;
 - `POST /api/auth/login` → login;
+- `GET /api/users` → listagem de usuários;
+- `GET /api/stores` → listagem de lojas;
 - `POST /api/stores` → cadastro de loja;
+- `GET /api/stores/:id` → detalhamento de loja;
+- `PUT /api/stores/:id` → atualização de loja;
+- `DELETE /api/stores/:id` → remoção de loja;
 - `GET /api/categories` → listagem de categorias.
 
 Todos os endpoints acima estão documentados no Swagger em `/docs`.
