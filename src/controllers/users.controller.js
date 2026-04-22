@@ -1,5 +1,10 @@
 const pool = require('../config/db');
 
+const parsePositiveInteger = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 const usersController = {
   getAll: async (req, res) => {
     try {
