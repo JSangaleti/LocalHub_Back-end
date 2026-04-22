@@ -6,6 +6,54 @@ const router = Router();
 /**
  * @swagger
  * /api/stores:
+ *   get:
+ *     summary: Lista todas as lojas
+ *     tags: [Stores]
+ *     responses:
+ *       200:
+ *         description: Lista de lojas retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Store'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/', storesController.getAll);
+
+/**
+ * @swagger
+ * /api/stores/{id}:
+ *   get:
+ *     summary: Busca uma loja pelo ID
+ *     tags: [Stores]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Loja encontrada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Store'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/:id', storesController.getById);
+
+/**
+ * @swagger
+ * /api/stores:
  *   post:
  *     summary: Cadastra uma nova loja
  *     tags: [Stores]
@@ -27,7 +75,7 @@ const router = Router();
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/:id', storesController.getById);
+router.post('/', storesController.create);
 
 /**
  * @swagger
