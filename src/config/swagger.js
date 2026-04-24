@@ -5,10 +5,9 @@ const options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'LocalHub API',
+            title: 'API do LocalHub',
             version: '1.0.0',
-            description:
-                'Documentação da API do LocalHub, uma plataforma para descoberta de comércios locais e visualização de publicações por categoria.'
+            description: 'Documentação da API do LocalHub.'
         },
         servers: [
             {
@@ -18,34 +17,51 @@ const options = {
         ],
         tags: [
             { name: 'Health', description: 'Verificação de funcionamento da API' },
-            { name: 'Auth', description: 'Cadastro e login de usuários' },
-            { name: 'Users', description: 'Consulta de usuários cadastrados' },
-            { name: 'Categories', description: 'Consulta de categorias comerciais' },
-            { name: 'Stores', description: 'Gerenciamento de lojas/comércios' },
-            { name: 'Posts', description: 'Feed de publicações do aplicativo' }
+            { name: 'Auth', description: 'Autenticação de usuários' },
+            { name: 'Users', description: 'Gerenciamento de usuários' },
+            { name: 'Categories', description: 'Gerenciamento de categorias' },
+            { name: 'Stores', description: 'Gerenciamento de lojas' },
+            { name: 'Posts', description: 'Gerenciamento de posts' }
         ],
         components: {
             schemas: {
                 ErrorResponse: {
                     type: 'object',
                     properties: {
-                        message: {
-                            type: 'string',
-                            example: 'Erro ao processar a requisição.'
-                        },
-                        error: {
-                            type: 'string',
-                            example: 'Detalhes técnicos do erro'
-                        }
+                        message: { type: 'string', example: 'Erro ao processar a requisição.' },
+                        error: { type: 'string', example: 'Detalhes técnicos do erro' }
                     }
                 },
-                HealthResponse: {
+                DeleteResponse: {
                     type: 'object',
                     properties: {
-                        success: { type: 'boolean', example: true },
-                        message: { type: 'string', example: 'API funcionando normalmente' }
+                        message: { type: 'string', example: 'Registro removido com sucesso.' }
                     }
                 },
+
+                Category: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'integer', example: 1 },
+                        name: { type: 'string', example: 'Restaurantes' },
+                        createdAt: { type: 'string', format: 'date-time' }
+                    }
+                },
+                CategoryCreateRequest: {
+                    type: 'object',
+                    required: ['name'],
+                    properties: {
+                        name: { type: 'string', example: 'Restaurantes' }
+                    }
+                },
+                CategoryResponse: {
+                    type: 'object',
+                    properties: {
+                        message: { type: 'string', example: 'Categoria cadastrada com sucesso.' },
+                        category: { $ref: '#/components/schemas/Category' }
+                    }
+                },
+
                 User: {
                     type: 'object',
                     properties: {
@@ -61,13 +77,12 @@ const options = {
                         updatedAt: { type: 'string', format: 'date-time' }
                     }
                 },
-                AuthRegisterRequest: {
+                UserUpdateRequest: {
                     type: 'object',
-                    required: ['name', 'email', 'password'],
                     properties: {
                         name: { type: 'string', example: 'Juliano Sangaleti' },
                         email: { type: 'string', format: 'email', example: 'juliano@email.com' },
-                        password: { type: 'string', minLength: 6, example: '123456' },
+                        password: { type: 'string', example: '123456' },
                         userType: {
                             type: 'string',
                             enum: ['cliente', 'comercio', 'admin'],
@@ -75,47 +90,14 @@ const options = {
                         }
                     }
                 },
-                AuthLoginRequest: {
-                    type: 'object',
-                    required: ['email', 'password'],
-                    properties: {
-                        email: { type: 'string', format: 'email', example: 'juliano@email.com' },
-                        password: { type: 'string', example: '123456' }
-                    }
-                },
-                AuthSuccessResponse: {
+                UserResponse: {
                     type: 'object',
                     properties: {
-                        message: { type: 'string', example: 'Login realizado com sucesso.' },
+                        message: { type: 'string', example: 'Usuário atualizado com sucesso.' },
                         user: { $ref: '#/components/schemas/User' }
                     }
                 },
-                AuthRegisterResponse: {
-                    type: 'object',
-                    properties: {
-                        message: { type: 'string', example: 'Usuário cadastrado com sucesso.' },
-                        user: {
-                            type: 'object',
-                            properties: {
-                                id: { type: 'integer', example: 1 },
-                                name: { type: 'string', example: 'Juliano Sangaleti' },
-                                email: { type: 'string', format: 'email', example: 'juliano@email.com' },
-                                userType: {
-                                    type: 'string',
-                                    enum: ['cliente', 'comercio', 'admin'],
-                                    example: 'cliente'
-                                }
-                            }
-                        }
-                    }
-                },
-                Category: {
-                    type: 'object',
-                    properties: {
-                        id: { type: 'integer', example: 1 },
-                        name: { type: 'string', example: 'Restaurantes' }
-                    }
-                },
+
                 Store: {
                     type: 'object',
                     properties: {
@@ -124,15 +106,27 @@ const options = {
                         categoryId: { type: 'integer', example: 3 },
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
+                        category: { type: 'string', example: 'Restaurantes' },
                         address: { type: 'string', example: 'Rua Central, 123' },
                         openingHours: { type: 'string', example: 'Seg-Sáb 18:00 às 23:00' },
-                        contact: { type: 'string', example: '(44) 99999-0000' },
-                        category: { type: 'string', example: 'Restaurantes' }
+                        contact: { type: 'string', example: '(44) 99999-0000' }
                     }
                 },
                 StoreCreateRequest: {
                     type: 'object',
                     required: ['ownerUserId', 'categoryId', 'name'],
+                    properties: {
+                        ownerUserId: { type: 'integer', example: 2 },
+                        categoryId: { type: 'integer', example: 3 },
+                        name: { type: 'string', example: 'Burger House' },
+                        description: { type: 'string', example: 'Hamburgueria artesanal' },
+                        address: { type: 'string', example: 'Rua Central, 123' },
+                        openingHours: { type: 'string', example: 'Seg-Sáb 18:00 às 23:00' },
+                        contact: { type: 'string', example: '(44) 99999-0000' }
+                    }
+                },
+                StoreUpdateRequest: {
+                    type: 'object',
                     properties: {
                         ownerUserId: { type: 'integer', example: 2 },
                         categoryId: { type: 'integer', example: 3 },
@@ -150,32 +144,58 @@ const options = {
                         store: { $ref: '#/components/schemas/Store' }
                     }
                 },
+
                 Post: {
                     type: 'object',
                     properties: {
                         id: { type: 'integer', example: 1 },
+                        storeId: { type: 'integer', example: 1 },
                         storeName: { type: 'string', example: 'Burger House' },
+                        categoryId: { type: 'integer', example: 2 },
+                        category: { type: 'string', example: 'Restaurantes' },
                         title: { type: 'string', example: 'Combo Especial' },
                         description: {
                             type: 'string',
-                            example: 'Hambúrguer + batata + refrigerante por preço promocional.'
+                            example: 'Hambúrguer + batata + refrigerante em promoção.'
                         },
-                        category: { type: 'string', example: 'Comida' },
-                        imageUrl: { type: 'string', example: '' }
+                        imageUrl: { type: 'string', example: 'https://exemplo.com/imagem.jpg' }
+                    }
+                },
+                PostCreateRequest: {
+                    type: 'object',
+                    required: ['storeId', 'title', 'description'],
+                    properties: {
+                        storeId: { type: 'integer', example: 1 },
+                        categoryId: { type: 'integer', example: 2 },
+                        title: { type: 'string', example: 'Combo Especial' },
+                        description: {
+                            type: 'string',
+                            example: 'Hambúrguer + batata + refrigerante em promoção.'
+                        },
+                        imageUrl: { type: 'string', example: 'https://exemplo.com/imagem.jpg' }
+                    }
+                },
+                PostUpdateRequest: {
+                    type: 'object',
+                    properties: {
+                        storeId: { type: 'integer', example: 1 },
+                        categoryId: { type: 'integer', example: 2 },
+                        title: { type: 'string', example: 'Novo título' },
+                        description: { type: 'string', example: 'Nova descrição' },
+                        imageUrl: { type: 'string', example: 'https://exemplo.com/nova-imagem.jpg' }
+                    }
+                },
+                PostResponse: {
+                    type: 'object',
+                    properties: {
+                        message: { type: 'string', example: 'Post cadastrado com sucesso.' },
+                        post: { $ref: '#/components/schemas/Post' }
                     }
                 }
             },
             responses: {
                 BadRequest: {
                     description: 'Requisição inválida',
-                    content: {
-                        'application/json': {
-                            schema: { $ref: '#/components/schemas/ErrorResponse' }
-                        }
-                    }
-                },
-                Unauthorized: {
-                    description: 'Não autorizado',
                     content: {
                         'application/json': {
                             schema: { $ref: '#/components/schemas/ErrorResponse' }
