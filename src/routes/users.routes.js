@@ -15,4 +15,8 @@ const router = Router();
  */
 router.get('/', usersController.getAll);
 
+router.get('/:id', usersController.getById);
+router.put('/:id', usersController.update);
+router.delete('/:id', usersController.remove);
+
 module.exports = router;

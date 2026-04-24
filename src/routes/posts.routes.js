@@ -15,4 +15,9 @@ const router = Router();
  */
 router.get('/', postsController.getAll);
 
+router.post('/', postsController.create);
+router.get('/:id', postsController.getById);
+router.put('/:id', postsController.update);
+router.delete('/:id', postsController.remove);
+
 module.exports = router;
