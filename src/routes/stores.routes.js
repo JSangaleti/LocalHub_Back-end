@@ -25,6 +25,32 @@ router.get('/', storesController.getAll);
 
 /**
  * @swagger
+ * /api/stores:
+ *   post:
+ *     summary: Cadastra uma nova loja
+ *     tags: [Stores]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/StoreCreateRequest'
+ *     responses:
+ *       201:
+ *         description: Loja cadastrada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StoreResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.post('/', storesController.create);
+
+/**
+ * @swagger
  * /api/stores/{id}:
  *   get:
  *     summary: Busca uma loja pelo ID
@@ -53,32 +79,6 @@ router.get('/:id', storesController.getById);
 
 /**
  * @swagger
- * /api/stores:
- *   post:
- *     summary: Cadastra uma nova loja
- *     tags: [Stores]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/StoreCreateRequest'
- *     responses:
- *       201:
- *         description: Loja cadastrada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/StoreResponse'
- *       400:
- *         $ref: '#/components/responses/BadRequest'
- *       500:
- *         $ref: '#/components/responses/InternalServerError'
- */
-router.post('/', storesController.create);
-
-/**
- * @swagger
  * /api/stores/{id}:
  *   put:
  *     summary: Atualiza os dados de uma loja
@@ -94,25 +94,20 @@ router.post('/', storesController.create);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               ownerUserId:
- *                 type: integer
- *               categoryId:
- *                 type: integer
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *               address:
- *                 type: string
- *               openingHours:
- *                 type: string
- *               contact:
- *                 type: string
+ *             $ref: '#/components/schemas/StoreUpdateRequest'
  *     responses:
  *       200:
  *         description: Loja atualizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StoreResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.put('/:id', storesController.update);
 
@@ -131,6 +126,16 @@ router.put('/:id', storesController.update);
  *     responses:
  *       200:
  *         description: Loja removida com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.delete('/:id', storesController.remove);
 
