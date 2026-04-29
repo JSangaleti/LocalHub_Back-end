@@ -8,13 +8,14 @@ const parsePositiveInteger = (value) => {
 const categoriesController = {
   getAll: async (req, res) => {
     try {
-      const { rows } = await pool.query(
-        `
-          SELECT id, name
-          FROM categories
-          ORDER BY name ASC
-        `
-      );
+      const { rows } = await pool.query(`
+      SELECT
+        id,
+        name,
+        created_at AS "createdAt"
+      FROM categories
+      ORDER BY name ASC
+    `);
 
       return res.status(200).json(rows);
     } catch (error) {

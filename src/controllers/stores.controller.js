@@ -101,32 +101,30 @@ const storesController = {
       const id = parsePositiveInteger(req.params.id);
 
       if (!id) {
-        return res.status(400).json({
-          message: 'ID inválido.'
-        });
+        return res.status(400).json({ message: 'ID inválido.' });
       }
 
       const { rows } = await pool.query(
         `
-          SELECT
-            s.id,
-            s.name,
-            s.description,
-            c.name AS category,
-            s.address,
-            s.opening_hours AS "openingHours",
-            s.contact
-          FROM stores s
-          LEFT JOIN categories c ON c.id = s.category_id
-          WHERE s.id = $1
-        `,
+        SELECT
+          s.id,
+          s.owner_user_id AS "ownerUserId",
+          s.category_id AS "categoryId",
+          s.name,
+          s.description,
+          c.name AS category,
+          s.address,
+          s.opening_hours AS "openingHours",
+          s.contact
+        FROM stores s
+        LEFT JOIN categories c ON c.id = s.category_id
+        WHERE s.id = $1
+      `,
         [id]
       );
 
       if (rows.length === 0) {
-        return res.status(404).json({
-          message: 'Loja não encontrada.'
-        });
+        return res.status(404).json({ message: 'Loja não encontrada.' });
       }
 
       return res.status(200).json(rows[0]);
