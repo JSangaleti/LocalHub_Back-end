@@ -280,6 +280,14 @@ const options = {
                             schema: { $ref: '#/components/schemas/ErrorResponse' }
                         }
                     }
+                },
+                Unauthorized: {
+                    description: 'Não autorizado',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
                 }
             }
         }
