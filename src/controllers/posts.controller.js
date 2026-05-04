@@ -9,16 +9,20 @@ const postsController = {
   getAll: async (req, res) => {
     try {
       const { rows } = await pool.query(`
-        SELECT
-          id,
-          store_name AS "storeName",
-          title,
-          description,
-          category,
-          image_url AS "imageUrl"
-        FROM v_feed_posts
-        ORDER BY id DESC
-      `);
+      SELECT
+        p.id,
+        p.store_id AS "storeId",
+        s.name AS "storeName",
+        p.category_id AS "categoryId",
+        c.name AS category,
+        p.title,
+        p.description,
+        p.image_url AS "imageUrl"
+      FROM posts p
+      JOIN stores s ON s.id = p.store_id
+      LEFT JOIN categories c ON c.id = p.category_id
+      ORDER BY p.id DESC
+    `);
 
       return res.status(200).json(rows);
     } catch (error) {

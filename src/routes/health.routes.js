@@ -12,6 +12,10 @@ const router = Router();
  *     responses:
  *       200:
  *         description: API online
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthResponse'
  */
 router.get('/', controller.check);
 

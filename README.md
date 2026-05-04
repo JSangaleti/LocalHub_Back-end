@@ -31,7 +31,7 @@ Este projeto utiliza as seguintes tecnologias:
 
 1. Clone o repositório  
 	```sh
-	git clone <url-do-repositorio>
+	git clone https://github.com/JSangaleti/LocalHub_Back-end.git
 	cd LocalHub_Back-end
 	```
 2. Instale as dependências  
