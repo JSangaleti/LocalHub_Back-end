@@ -191,6 +191,61 @@ const options = {
                         message: { type: 'string', example: 'Post cadastrado com sucesso.' },
                         post: { $ref: '#/components/schemas/Post' }
                     }
+                },
+                AuthRegisterRequest: {
+                    type: 'object',
+                    required: ['name', 'email', 'password'],
+                    properties: {
+                        name: { type: 'string', example: 'Juliano Sangaleti' },
+                        email: { type: 'string', format: 'email', example: 'juliano@email.com' },
+                        password: { type: 'string', minLength: 6, example: '123456' },
+                        userType: {
+                            type: 'string',
+                            enum: ['cliente', 'comercio', 'admin'],
+                            example: 'cliente'
+                        }
+                    }
+                },
+                AuthLoginRequest: {
+                    type: 'object',
+                    required: ['email', 'password'],
+                    properties: {
+                        email: { type: 'string', format: 'email', example: 'juliano@email.com' },
+                        password: { type: 'string', example: '123456' }
+                    }
+                },
+                AuthRegisterResponse: {
+                    type: 'object',
+                    properties: {
+                        message: { type: 'string', example: 'Usuário cadastrado com sucesso.' },
+                        user: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'integer', example: 1 },
+                                name: { type: 'string', example: 'Juliano Sangaleti' },
+                                email: { type: 'string', format: 'email', example: 'juliano@email.com' },
+                                userType: {
+                                    type: 'string',
+                                    enum: ['cliente', 'comercio', 'admin'],
+                                    example: 'cliente'
+                                }
+                            }
+                        }
+                    }
+                },
+                AuthSuccessResponse: {
+                    type: 'object',
+                    properties: {
+                        message: { type: 'string', example: 'Login realizado com sucesso.' },
+                        user: { $ref: '#/components/schemas/User' }
+                    }
+                },
+                HealthResponse: {
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean', example: true },
+                        message: { type: 'string', example: 'API funcionando normalmente' }
+                    }
                 }
             },
             responses: {
