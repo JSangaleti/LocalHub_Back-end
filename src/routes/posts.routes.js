@@ -7,17 +7,57 @@ const router = Router();
  * @swagger
  * /api/posts:
  *   get:
- *     summary: Lista os posts do feed
+ *     summary: Lista e pesquisa posts do feed
  *     tags: [Posts]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Buscar por título ou descrição do post
+ *       - in: query
+ *         name: categoryId
+ *         schema:
+ *           type: integer
+ *         description: Filtrar posts por categoria ID
+ *       - in: query
+ *         name: storeId
+ *         schema:
+ *           type: integer
+ *         description: Filtrar posts por loja ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Quantidade máxima de resultados (padrão 20)
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Deslocamento para paginação (padrão 0)
  *     responses:
  *       200:
  *         description: Lista de posts retornada com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Post'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Post'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     limit:
+ *                       type: integer
+ *                     offset:
+ *                       type: integer
+ *                     count:
+ *                       type: integer
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
