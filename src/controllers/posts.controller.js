@@ -8,23 +8,69 @@ const parsePositiveInteger = (value) => {
 const postsController = {
   getAll: async (req, res) => {
     try {
-      const { rows } = await pool.query(`
-      SELECT
-        p.id,
-        p.store_id AS "storeId",
-        s.name AS "storeName",
-        p.category_id AS "categoryId",
-        c.name AS category,
-        p.title,
-        p.description,
-        p.image_url AS "imageUrl"
-      FROM posts p
-      JOIN stores s ON s.id = p.store_id
-      LEFT JOIN categories c ON c.id = p.category_id
-      ORDER BY p.id DESC
-    `);
+      const { search, categoryId, storeId, limit = 20, offset = 0 } = req.query;
 
-      return res.status(200).json(rows);
+      let query = `
+        SELECT
+          p.id,
+          p.store_id AS "storeId",
+          s.name AS "storeName",
+          p.category_id AS "categoryId",
+          c.name AS category,
+          p.title,
+          p.description,
+          p.image_url AS "imageUrl"
+        FROM posts p
+        JOIN stores s ON s.id = p.store_id
+        LEFT JOIN categories c ON c.id = p.category_id
+        WHERE 1=1
+      `;
+
+      const params = [];
+
+      // Filtro de busca por título ou descrição
+      if (search && search.trim()) {
+        query += ` AND (p.title ILIKE $${params.length + 1} OR p.description ILIKE $${params.length + 2})`;
+        params.push(`%${search.trim()}%`, `%${search.trim()}%`);
+      }
+
+      // Filtro por categoria
+      if (categoryId) {
+        const categoryIdParsed = parsePositiveInteger(categoryId);
+        if (categoryIdParsed) {
+          query += ` AND p.category_id = $${params.length + 1}`;
+          params.push(categoryIdParsed);
+        }
+      }
+
+      // Filtro por loja
+      if (storeId) {
+        const storeIdParsed = parsePositiveInteger(storeId);
+        if (storeIdParsed) {
+          query += ` AND p.store_id = $${params.length + 1}`;
+          params.push(storeIdParsed);
+        }
+      }
+
+      query += ` ORDER BY p.id DESC`;
+
+      // Paginação
+      const limitParsed = parsePositiveInteger(limit) || 20;
+      const offsetParsed = parsePositiveInteger(offset) || 0;
+
+      query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+      params.push(limitParsed, offsetParsed);
+
+      const { rows } = await pool.query(query, params);
+
+      return res.status(200).json({
+        data: rows,
+        pagination: {
+          limit: limitParsed,
+          offset: offsetParsed,
+          count: rows.length
+        }
+      });
     } catch (error) {
       return res.status(500).json({
         message: 'Erro ao buscar posts.',
