@@ -27,40 +27,62 @@ Este projeto utiliza as seguintes tecnologias:
 - **Docker Compose**
 - **dotenv**
 
-## Como executar
+
+## Como executar (Docker)
 
 1. Clone o repositório  
-	```sh
-	git clone <url-do-repositorio>
-	cd LocalHub_Back-end
-	```
-2. Instale as dependências  
-	```sh
-	npm install
-	```
-3. Configure o arquivo `.env`  
-	```text
-	PORT=3000
-	PROJECT_NAME=localhub
-	
-	DB_HOST=localhost
-	DB_PORT=5432
-	DB_USER=postgres
-	DB_PASSWORD=postgres
-	DB_NAME=localhubdb
-	```
-4. Suba o banco de dados com Docker Compose  
-	```sh
-	docker compose up -d
-	```
-5. Aplique a modelagem e carga inicial no banco
-	```sh
-	npm run db:init
-	```
-6. Inicie o servidor  
-	```sh
-	npm run dev
-	```
+    ```sh
+    git clone https://github.com/JSangaleti/LocalHub_Back-end.git
+    cd LocalHub_Back-end
+    ```
+
+2. Suba os serviços (API + Postgres)  
+    ```sh
+    docker compose up -d --build
+    ```
+
+3. Aplique a modelagem e carga inicial no banco  
+    ```sh
+    docker compose exec backend npm run db:init
+    ```
+
+4. Acesse  
+    - API: http://localhost:3000  
+    - Swagger: http://localhost:3000/docs
+
+## Como executar (Local)
+
+1. Instale as dependências  
+    ```sh
+    npm install
+    ```
+
+2. Configure o arquivo `.env`  
+    ```text
+    PORT=3000
+    PROJECT_NAME=localhub
+    
+    DB_HOST=localhost
+    DB_PORT=5432
+    DB_USER=postgres
+    DB_PASSWORD=postgres
+    DB_NAME=localhubdb
+    ```
+
+3. Suba o banco de dados com Docker Compose  
+    ```sh
+    docker compose up -d
+    ```
+
+4. Aplique a modelagem e carga inicial no banco  
+    ```sh
+    npm run db:init
+    ```
+
+5. Inicie o servidor  
+    ```sh
+    npm run dev
+    ```
 
 ## Modelagem do banco de dados
 
