@@ -278,8 +278,6 @@ const storesController = {
           s.longitude,
           s.opening_hours AS "openingHours",
           s.contact
-          s.opening_hours AS "openingHours",
-          s.contact
         FROM stores s
         LEFT JOIN categories c ON c.id = s.category_id
         WHERE s.id = $1
