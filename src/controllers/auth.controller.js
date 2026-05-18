@@ -1,21 +1,44 @@
+const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 
 const ALLOWED_USER_TYPES = new Set(['cliente', 'comercio', 'admin']);
+
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 42;
+const SALT_ROUNDS = 10;
+
+const validatePassword = (password) => {
+  if (typeof password !== 'string' || password.trim().length === 0) {
+    return 'A senha é obrigatória.';
+  }
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`;
+  }
+
+  if (password.length > MAX_PASSWORD_LENGTH) {
+    return `A senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres.`;
+  }
+
+  return null;
+};
 
 const authController = {
   register: async (req, res) => {
     try {
       const { name, email, password, userType } = req.body;
 
-      if (!name || !email || !password) {
+      if (!name || !email) {
         return res.status(400).json({
-          message: 'name, email e password são obrigatórios.'
+          message: 'name e email são obrigatórios.'
         });
       }
 
-      if (password.length < 6) {
+      const passwordError = validatePassword(password);
+
+      if (passwordError) {
         return res.status(400).json({
-          message: 'A senha deve ter pelo menos 6 caracteres.'
+          message: passwordError
         });
       }
 
@@ -28,6 +51,8 @@ const authController = {
         });
       }
 
+      const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
       const { rows } = await pool.query(
         `
           INSERT INTO users (name, email, password, user_type)
@@ -38,7 +63,7 @@ const authController = {
             email,
             user_type AS "userType"
         `,
-        [name.trim(), normalizedEmail, password, normalizedUserType]
+        [name.trim(), normalizedEmail, passwordHash, normalizedUserType]
       );
 
       return res.status(201).json({
@@ -86,17 +111,27 @@ const authController = {
         [normalizedEmail]
       );
 
-      if (rows.length === 0 || password !== rows[0].password) {
+      const userRecord = rows[0];
+
+      if (!userRecord) {
+        return res.status(401).json({
+          message: 'Credenciais inválidas.'
+        });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, userRecord.password);
+
+      if (!isPasswordValid) {
         return res.status(401).json({
           message: 'Credenciais inválidas.'
         });
       }
 
       const user = {
-        id: rows[0].id,
-        name: rows[0].name,
-        email: rows[0].email,
-        userType: rows[0].userType
+        id: userRecord.id,
+        name: userRecord.name,
+        email: userRecord.email,
+        userType: userRecord.userType
       };
 
       return res.status(200).json({
