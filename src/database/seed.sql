@@ -23,6 +23,14 @@ INSERT INTO
     name,
     description,
     address,
+    address_number,
+    neighborhood,
+    city,
+    state,
+    postal_code,
+    country,
+    latitude,
+    longitude,
     opening_hours,
     contact
   )
@@ -31,7 +39,15 @@ SELECT
   c.id,
   'Loja Estilo',
   'Moda casual e acessórios para o dia a dia.',
-  'Centro, Campo Mourão - PR',
+  'Rua Brasil',
+  '123',
+  'Centro',
+  'Campo Mourão',
+  'PR',
+  '87300-000',
+  'Brasil',
+  -24.04630000,
+  -52.37800000,
   '08:00 às 18:00',
   '(44) 99999-9999'
 FROM
@@ -47,6 +63,23 @@ WHERE
     WHERE
       s.name = 'Loja Estilo'
   );
+
+UPDATE
+  stores
+SET
+  address = 'Rua Brasil',
+  address_number = '123',
+  neighborhood = 'Centro',
+  city = 'Campo Mourão',
+  state = 'PR',
+  postal_code = '87300-000',
+  country = 'Brasil',
+  latitude = -24.04630000,
+  longitude = -52.37800000,
+  opening_hours = '08:00 às 18:00',
+  contact = '(44) 99999-9999'
+WHERE
+  name = 'Loja Estilo';
 
 INSERT INTO
   posts (
