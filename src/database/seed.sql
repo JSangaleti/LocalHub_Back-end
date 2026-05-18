@@ -10,8 +10,8 @@ INSERT INTO
   users (name, email, password, user_type)
 VALUES
   (
-    'Loja Estilo',
-    'loja.estilo@localhub.dev',
+    'Mundo da Panela',
+    'mundo_da_panela@localhub.dev',
     '$2b$10$8a0uwSeIyWgs/rO6QanhPODmMrcpsKn5BHy5TapuIgOaRy57WuvzC',
     'comercio'
   ) ON CONFLICT (email) DO NOTHING;
