@@ -82,7 +82,13 @@ const options = {
                     properties: {
                         name: { type: 'string', example: 'Juliano Sangaleti' },
                         email: { type: 'string', format: 'email', example: 'juliano@email.com' },
-                        password: { type: 'string', example: '123456' },
+                        password: {
+                            type: 'string',
+                            minLength: 8,
+                            maxLength: 42,
+                            example: '12345678',
+                            description: 'Nova senha do usuário. Deve ter entre 8 e 42 caracteres e será armazenada como hash.'
+                        },
                         userType: {
                             type: 'string',
                             enum: ['cliente', 'comercio', 'admin'],
@@ -198,7 +204,13 @@ const options = {
                     properties: {
                         name: { type: 'string', example: 'Juliano Sangaleti' },
                         email: { type: 'string', format: 'email', example: 'juliano@email.com' },
-                        password: { type: 'string', minLength: 6, example: '123456' },
+                        password: {
+                            type: 'string',
+                            minLength: 8,
+                            maxLength: 42,
+                            example: '12345678',
+                            description: 'Senha do usuário. Deve ter entre 8 e 42 caracteres e será armazenada como hash.'
+                        },
                         userType: {
                             type: 'string',
                             enum: ['cliente', 'comercio', 'admin'],
