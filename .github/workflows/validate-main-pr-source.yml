@@ -1,0 +1,36 @@
+name: Validate main PR source
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+jobs:
+  validate-pr-source:
+    name: Validate PR source branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if PR to main comes from development
+        run: |
+          echo "Target branch: ${{ github.base_ref }}"
+          echo "Source branch: ${{ github.head_ref }}"
+          echo "Source repository: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "Target repository: ${{ github.repository }}"
+
+          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+            echo "Pull requests to main must come from the same repository."
+            exit 1
+          fi
+
+          if [ "${{ github.head_ref }}" != "development" ]; then
+            echo "Pull requests to main are only allowed from the development branch."
+            exit 1
+          fi
+
+          echo "Valid pull request source branch."
