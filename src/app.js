@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
+const path = require('path');
 
 const routes = require('./routes');
 const swaggerSpec = require('./config/swagger');
@@ -17,6 +18,9 @@ app.get('/', (req, res) => {
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api', routes);
+
+// (ex: /uploads/posts/foto-123.jpg)
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use(errorHandler);
 
