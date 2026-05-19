@@ -6,6 +6,7 @@ const postsRoutes = require('./posts.routes');
 const storesRoutes = require('./stores.routes');
 const categoriesRoutes = require('./categories.routes');
 const usersRoutes = require('./users.routes');
+const uploadsRoutes = require('./uploads.routes');
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use('/posts', postsRoutes);
 router.use('/stores', storesRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/users', usersRoutes);
+router.use('/uploads', uploadsRoutes);
 
 module.exports = router;
