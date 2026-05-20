@@ -5,6 +5,104 @@ const parsePositiveInteger = (value) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
+const parseCoordinate = (value) => {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : NaN;
+};
+
+const validateCoordinates = (latitude, longitude) => {
+  const parsedLatitude = parseCoordinate(latitude);
+  const parsedLongitude = parseCoordinate(longitude);
+
+  if (Number.isNaN(parsedLatitude) || Number.isNaN(parsedLongitude)) {
+    return {
+      error: 'latitude e longitude devem ser números válidos.'
+    };
+  }
+
+  if (
+    (parsedLatitude === null && parsedLongitude !== null)
+    || (parsedLatitude !== null && parsedLongitude === null)
+  ) {
+    return {
+      error: 'latitude e longitude devem ser informadas juntas.'
+    };
+  }
+
+  if (parsedLatitude !== null && (parsedLatitude < -90 || parsedLatitude > 90)) {
+    return {
+      error: 'latitude deve estar entre -90 e 90.'
+    };
+  }
+
+  if (parsedLongitude !== null && (parsedLongitude < -180 || parsedLongitude > 180)) {
+    return {
+      error: 'longitude deve estar entre -180 e 180.'
+    };
+  }
+
+  return {
+    latitude: parsedLatitude,
+    longitude: parsedLongitude
+  };
+};
+
+const buildFormattedAddress = (store) => {
+  const streetLine = [store.address, store.addressNumber]
+    .filter(Boolean)
+    .join(', ');
+
+  const cityLine = [
+    store.neighborhood,
+    store.city && store.state ? `${store.city} - ${store.state}` : store.city || store.state
+  ]
+    .filter(Boolean)
+    .join(' - ');
+
+  return [streetLine, cityLine]
+    .filter(Boolean)
+    .join(' - ') || null;
+};
+
+const buildMapLinks = (latitude, longitude) => {
+  if (latitude === null || longitude === null) {
+    return null;
+  }
+
+  const destination = `${latitude},${longitude}`;
+
+  return {
+    googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`,
+    waze: `https://waze.com/ul?ll=${encodeURIComponent(destination)}&navigate=yes`
+  };
+};
+
+const mapStoreResponse = (store) => {
+  const latitude = store.latitude !== null && store.latitude !== undefined
+    ? Number(store.latitude)
+    : null;
+
+  const longitude = store.longitude !== null && store.longitude !== undefined
+    ? Number(store.longitude)
+    : null;
+
+  const mappedStore = {
+    ...store,
+    latitude,
+    longitude
+  };
+
+  return {
+    ...mappedStore,
+    formattedAddress: buildFormattedAddress(mappedStore),
+    mapLinks: buildMapLinks(latitude, longitude)
+  };
+};
+
 const storesController = {
   getAll: async (req, res) => {
     try {
@@ -18,6 +116,14 @@ const storesController = {
             s.description,
             c.name AS category,
             s.address,
+            s.address_number AS "addressNumber",
+            s.neighborhood,
+            s.city,
+            s.state,
+            s.postal_code AS "postalCode",
+            s.country,
+            s.latitude,
+            s.longitude,
             s.opening_hours AS "openingHours",
             s.contact
           FROM stores s
@@ -26,7 +132,7 @@ const storesController = {
         `
       );
 
-      return res.status(200).json(rows);
+      return res.status(200).json(rows.map(mapStoreResponse));
     } catch (error) {
       return res.status(500).json({
         message: 'Erro ao listar lojas.',
@@ -43,6 +149,14 @@ const storesController = {
         name,
         description,
         address,
+        addressNumber,
+        neighborhood,
+        city,
+        state,
+        postalCode,
+        country,
+        latitude,
+        longitude,
         openingHours,
         contact
       } = req.body;
@@ -53,34 +167,74 @@ const storesController = {
         });
       }
 
+      const coordinates = validateCoordinates(latitude, longitude);
+
+      if (coordinates.error) {
+        return res.status(400).json({
+          message: coordinates.error
+        });
+      }
+
       const { rows } = await pool.query(
         `
-          INSERT INTO stores (
-            owner_user_id,
-            category_id,
-            name,
-            description,
-            address,
-            opening_hours,
-            contact
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-          RETURNING
-            id,
-            owner_user_id AS "ownerUserId",
-            category_id AS "categoryId",
-            name,
-            description,
-            address,
-            opening_hours AS "openingHours",
-            contact
-        `,
-        [ownerUserId, categoryId, name, description ?? null, address ?? null, openingHours ?? null, contact ?? null]
+    INSERT INTO stores (
+      owner_user_id,
+      category_id,
+      name,
+      description,
+      address,
+      address_number,
+      neighborhood,
+      city,
+      state,
+      postal_code,
+      country,
+      latitude,
+      longitude,
+      opening_hours,
+      contact
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    RETURNING
+      id,
+      owner_user_id AS "ownerUserId",
+      category_id AS "categoryId",
+      name,
+      description,
+      address,
+      address_number AS "addressNumber",
+      neighborhood,
+      city,
+      state,
+      postal_code AS "postalCode",
+      country,
+      latitude,
+      longitude,
+      opening_hours AS "openingHours",
+      contact
+  `,
+        [
+          ownerUserId,
+          categoryId,
+          name,
+          description ?? null,
+          address ?? null,
+          addressNumber ?? null,
+          neighborhood ?? null,
+          city ?? null,
+          state ?? null,
+          postalCode ?? null,
+          country ?? 'Brasil',
+          coordinates.latitude,
+          coordinates.longitude,
+          openingHours ?? null,
+          contact ?? null
+        ]
       );
 
       return res.status(201).json({
         message: 'Loja cadastrada com sucesso.',
-        store: rows[0]
+        store: mapStoreResponse(rows[0])
       });
     } catch (error) {
       if (error.code === '23503') {
@@ -114,6 +268,14 @@ const storesController = {
           s.description,
           c.name AS category,
           s.address,
+          s.address_number AS "addressNumber",
+          s.neighborhood,
+          s.city,
+          s.state,
+          s.postal_code AS "postalCode",
+          s.country,
+          s.latitude,
+          s.longitude,
           s.opening_hours AS "openingHours",
           s.contact
         FROM stores s
@@ -127,7 +289,7 @@ const storesController = {
         return res.status(404).json({ message: 'Loja não encontrada.' });
       }
 
-      return res.status(200).json(rows[0]);
+      return res.status(200).json(mapStoreResponse(rows[0]));
     } catch (error) {
       return res.status(500).json({
         message: 'Erro ao buscar loja.',
@@ -152,12 +314,32 @@ const storesController = {
         name,
         description,
         address,
+        addressNumber,
+        neighborhood,
+        city,
+        state,
+        postalCode,
+        country,
+        latitude,
+        longitude,
         openingHours,
         contact
       } = req.body;
 
       const updates = [];
       const values = [];
+
+      let coordinates = null;
+
+      if (latitude !== undefined || longitude !== undefined) {
+        coordinates = validateCoordinates(latitude, longitude);
+
+        if (coordinates.error) {
+          return res.status(400).json({
+            message: coordinates.error
+          });
+        }
+      }
 
       if (ownerUserId !== undefined) {
         values.push(ownerUserId);
@@ -194,6 +376,44 @@ const storesController = {
         updates.push(`contact = $${values.length}`);
       }
 
+      if (addressNumber !== undefined) {
+        values.push(addressNumber);
+        updates.push(`address_number = $${values.length}`);
+      }
+
+      if (neighborhood !== undefined) {
+        values.push(neighborhood);
+        updates.push(`neighborhood = $${values.length}`);
+      }
+
+      if (city !== undefined) {
+        values.push(city);
+        updates.push(`city = $${values.length}`);
+      }
+
+      if (state !== undefined) {
+        values.push(state);
+        updates.push(`state = $${values.length}`);
+      }
+
+      if (postalCode !== undefined) {
+        values.push(postalCode);
+        updates.push(`postal_code = $${values.length}`);
+      }
+
+      if (country !== undefined) {
+        values.push(country);
+        updates.push(`country = $${values.length}`);
+      }
+
+      if (coordinates) {
+        values.push(coordinates.latitude);
+        updates.push(`latitude = $${values.length}`);
+
+        values.push(coordinates.longitude);
+        updates.push(`longitude = $${values.length}`);
+      }
+
       if (updates.length === 0) {
         return res.status(400).json({
           message: 'Informe ao menos um campo para atualização.'
@@ -214,6 +434,14 @@ const storesController = {
             name,
             description,
             address,
+            address_number AS "addressNumber",
+            neighborhood,
+            city,
+            state,
+            postal_code AS "postalCode",
+            country,
+            latitude,
+            longitude,
             opening_hours AS "openingHours",
             contact
         `,
@@ -228,7 +456,7 @@ const storesController = {
 
       return res.status(200).json({
         message: 'Loja atualizada com sucesso.',
-        store: rows[0]
+        store: mapStoreResponse(rows[0])
       });
     } catch (error) {
       if (error.code === '23503') {

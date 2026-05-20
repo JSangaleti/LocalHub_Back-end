@@ -82,7 +82,13 @@ const options = {
                     properties: {
                         name: { type: 'string', example: 'Juliano Sangaleti' },
                         email: { type: 'string', format: 'email', example: 'juliano@email.com' },
-                        password: { type: 'string', example: '123456' },
+                        password: {
+                            type: 'string',
+                            minLength: 8,
+                            maxLength: 42,
+                            example: '12345678',
+                            description: 'Nova senha do usuário. Deve ter entre 8 e 42 caracteres e será armazenada como hash.'
+                        },
                         userType: {
                             type: 'string',
                             enum: ['cliente', 'comercio', 'admin'],
@@ -107,11 +113,83 @@ const options = {
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
                         category: { type: 'string', example: 'Restaurantes' },
-                        address: { type: 'string', example: 'Rua Central, 123' },
+
+                        address: {
+                            type: 'string',
+                            example: 'Rua Brasil',
+                            description: 'Rua ou logradouro do comércio.'
+                        },
+                        addressNumber: {
+                            type: 'string',
+                            example: '123',
+                            description: 'Número do estabelecimento.'
+                        },
+                        neighborhood: {
+                            type: 'string',
+                            example: 'Centro',
+                            description: 'Bairro do comércio.'
+                        },
+                        city: {
+                            type: 'string',
+                            example: 'Campo Mourão',
+                            description: 'Cidade do comércio.'
+                        },
+                        state: {
+                            type: 'string',
+                            example: 'PR',
+                            description: 'UF do comércio.'
+                        },
+                        postalCode: {
+                            type: 'string',
+                            example: '87300-000',
+                            description: 'CEP do comércio.'
+                        },
+                        country: {
+                            type: 'string',
+                            example: 'Brasil',
+                            description: 'País do comércio.'
+                        },
+                        latitude: {
+                            type: 'number',
+                            format: 'double',
+                            minimum: -90,
+                            maximum: 90,
+                            example: -24.0463
+                        },
+                        longitude: {
+                            type: 'number',
+                            format: 'double',
+                            minimum: -180,
+                            maximum: 180,
+                            example: -52.378
+                        },
+                        formattedAddress: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Rua Brasil, 123 - Centro - Campo Mourão - PR',
+                            description: 'Endereço formatado gerado pela API para exibição no frontend.'
+                        },
+                        mapLinks: {
+                            type: 'object',
+                            nullable: true,
+                            description: 'Links prontos para abertura de rota em aplicativos de mapa.',
+                            properties: {
+                                googleMaps: {
+                                    type: 'string',
+                                    example: 'https://www.google.com/maps/dir/?api=1&destination=-24.0463%2C-52.378&travelmode=driving'
+                                },
+                                waze: {
+                                    type: 'string',
+                                    example: 'https://waze.com/ul?ll=-24.0463%2C-52.378&navigate=yes'
+                                }
+                            }
+                        },
+
                         openingHours: { type: 'string', example: 'Seg-Sáb 18:00 às 23:00' },
                         contact: { type: 'string', example: '(44) 99999-0000' }
                     }
                 },
+
                 StoreCreateRequest: {
                     type: 'object',
                     required: ['ownerUserId', 'categoryId', 'name'],
@@ -120,11 +198,58 @@ const options = {
                         categoryId: { type: 'integer', example: 3 },
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
-                        address: { type: 'string', example: 'Rua Central, 123' },
+
+                        address: {
+                            type: 'string',
+                            example: 'Rua Brasil',
+                            description: 'Rua ou logradouro do comércio.'
+                        },
+                        addressNumber: {
+                            type: 'string',
+                            example: '123'
+                        },
+                        neighborhood: {
+                            type: 'string',
+                            example: 'Centro'
+                        },
+                        city: {
+                            type: 'string',
+                            example: 'Campo Mourão'
+                        },
+                        state: {
+                            type: 'string',
+                            example: 'PR'
+                        },
+                        postalCode: {
+                            type: 'string',
+                            example: '87300-000'
+                        },
+                        country: {
+                            type: 'string',
+                            example: 'Brasil'
+                        },
+                        latitude: {
+                            type: 'number',
+                            format: 'double',
+                            minimum: -90,
+                            maximum: 90,
+                            example: -24.0463,
+                            description: 'Deve ser informada junto com longitude.'
+                        },
+                        longitude: {
+                            type: 'number',
+                            format: 'double',
+                            minimum: -180,
+                            maximum: 180,
+                            example: -52.378,
+                            description: 'Deve ser informada junto com latitude.'
+                        },
+
                         openingHours: { type: 'string', example: 'Seg-Sáb 18:00 às 23:00' },
                         contact: { type: 'string', example: '(44) 99999-0000' }
                     }
                 },
+
                 StoreUpdateRequest: {
                     type: 'object',
                     properties: {
@@ -132,11 +257,58 @@ const options = {
                         categoryId: { type: 'integer', example: 3 },
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
-                        address: { type: 'string', example: 'Rua Central, 123' },
+
+                        address: {
+                            type: 'string',
+                            example: 'Rua Brasil',
+                            description: 'Rua ou logradouro do comércio.'
+                        },
+                        addressNumber: {
+                            type: 'string',
+                            example: '123'
+                        },
+                        neighborhood: {
+                            type: 'string',
+                            example: 'Centro'
+                        },
+                        city: {
+                            type: 'string',
+                            example: 'Campo Mourão'
+                        },
+                        state: {
+                            type: 'string',
+                            example: 'PR'
+                        },
+                        postalCode: {
+                            type: 'string',
+                            example: '87300-000'
+                        },
+                        country: {
+                            type: 'string',
+                            example: 'Brasil'
+                        },
+                        latitude: {
+                            type: 'number',
+                            format: 'double',
+                            minimum: -90,
+                            maximum: 90,
+                            example: -24.0463,
+                            description: 'Deve ser informada junto com longitude.'
+                        },
+                        longitude: {
+                            type: 'number',
+                            format: 'double',
+                            minimum: -180,
+                            maximum: 180,
+                            example: -52.378,
+                            description: 'Deve ser informada junto com latitude.'
+                        },
+
                         openingHours: { type: 'string', example: 'Seg-Sáb 18:00 às 23:00' },
                         contact: { type: 'string', example: '(44) 99999-0000' }
                     }
                 },
+
                 StoreResponse: {
                     type: 'object',
                     properties: {
@@ -198,7 +370,13 @@ const options = {
                     properties: {
                         name: { type: 'string', example: 'Juliano Sangaleti' },
                         email: { type: 'string', format: 'email', example: 'juliano@email.com' },
-                        password: { type: 'string', minLength: 6, example: '123456' },
+                        password: {
+                            type: 'string',
+                            minLength: 8,
+                            maxLength: 42,
+                            example: '12345678',
+                            description: 'Senha do usuário. Deve ter entre 8 e 42 caracteres e será armazenada como hash.'
+                        },
                         userType: {
                             type: 'string',
                             enum: ['cliente', 'comercio', 'admin'],

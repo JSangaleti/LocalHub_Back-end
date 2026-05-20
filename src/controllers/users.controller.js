@@ -1,10 +1,31 @@
+const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 
 const ALLOWED_USER_TYPES = new Set(['cliente', 'comercio', 'admin']);
 
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 42;
+const SALT_ROUNDS = 10;
+
 const parsePositiveInteger = (value) => {
   const parsed = Number.parseInt(value, 10);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const validatePassword = (password) => {
+  if (typeof password !== 'string' || password.trim().length === 0) {
+    return 'A senha é obrigatória.';
+  }
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`;
+  }
+
+  if (password.length > MAX_PASSWORD_LENGTH) {
+    return `A senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres.`;
+  }
+
+  return null;
 };
 
 const usersController = {
@@ -97,12 +118,17 @@ const usersController = {
       }
 
       if (password !== undefined) {
-        if (password.length < 6) {
+        const passwordError = validatePassword(password);
+
+        if (passwordError) {
           return res.status(400).json({
-            message: 'A senha deve ter pelo menos 6 caracteres.'
+            message: passwordError
           });
         }
-        values.push(password);
+
+        const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+        values.push(passwordHash);
         updates.push(`password = $${values.length}`);
       }
 
