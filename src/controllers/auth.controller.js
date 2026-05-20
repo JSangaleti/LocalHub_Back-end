@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 
 const ALLOWED_USER_TYPES = new Set(['cliente', 'comercio', 'admin']);
+const ADMIN_EMAIL = 'admin@admin.com';
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 42;
@@ -45,9 +46,21 @@ const authController = {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedUserType = userType ? userType.trim().toLowerCase() : 'cliente';
 
+      if (normalizedEmail === ADMIN_EMAIL) {
+        return res.status(403).json({
+          message: 'Este e-mail é reservado ao administrador do sistema.'
+        });
+      }
+
+      if (normalizedUserType === 'admin') {
+        return res.status(403).json({
+          message: 'Não é permitido cadastrar usuários administradores.'
+        });
+      }
+
       if (!ALLOWED_USER_TYPES.has(normalizedUserType)) {
         return res.status(400).json({
-          message: 'userType inválido. Valores permitidos: cliente, comercio, admin.'
+          message: 'userType inválido. Valores permitidos: cliente, comercio.'
         });
       }
 

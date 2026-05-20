@@ -78,6 +78,17 @@ Esse comando aplica as migrations e executa o seed inicial no banco.
 - Health check: <http://localhost:3000/api/health>
 - Swagger: <http://localhost:3000/docs>
 
+### Conta administrador (seed)
+
+Após `npm run db:init` ou `npm run db:seed`, o sistema possui um único usuário administrador:
+
+| Campo | Valor |
+|-------|-------|
+| E-mail | `admin@admin.com` |
+| Senha | `admin123` |
+
+Não é possível criar outro usuário `admin` pelo cadastro público (`POST /api/auth/register`).
+
 ### 5. Ver logs
 
 Para acompanhar os logs do backend:
