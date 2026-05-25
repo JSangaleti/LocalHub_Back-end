@@ -64,6 +64,28 @@ CREATE INDEX IF NOT EXISTS idx_stores_owner_user_id ON stores(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_stores_category_id ON stores(category_id);
 CREATE INDEX IF NOT EXISTS idx_posts_store_id ON posts(store_id);
 
+-- Tabela: post_likes (curtida por usuário em post)
+CREATE TABLE IF NOT EXISTS post_likes (
+  id BIGSERIAL PRIMARY KEY,
+  post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (post_id, user_id)
+);
+
+-- Tabela: post_comments
+CREATE TABLE IF NOT EXISTS post_comments (
+  id BIGSERIAL PRIMARY KEY,
+  post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_post_likes_post_id ON post_likes(post_id);
+CREATE INDEX IF NOT EXISTS idx_post_likes_user_id ON post_likes(user_id);
+CREATE INDEX IF NOT EXISTS idx_post_comments_post_id ON post_comments(post_id);
+
 DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
 CREATE TRIGGER trg_users_updated_at
 BEFORE UPDATE ON users
