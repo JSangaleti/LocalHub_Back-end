@@ -26,6 +26,7 @@ INSERT INTO
   stores (
     owner_user_id,
     category_id,
+    cnpj,
     name,
     description,
     address,
@@ -43,6 +44,7 @@ INSERT INTO
 SELECT
   u.id,
   c.id,
+  '11222333000181',
   'Mundo da Panela',
   'Restaurante de comida caseira, marmitas e pratos feitos.',
   'Rua Brasil',
@@ -67,12 +69,13 @@ WHERE
     FROM
       stores s
     WHERE
-      s.name = 'Mundo da Panela'
+      s.cnpj = '11222333000181'
   );
 
 UPDATE
   stores
 SET
+  cnpj = '11222333000181',
   description = 'Restaurante de comida caseira, marmitas e pratos feitos.',
   address = 'Rua Brasil',
   address_number = '123',
