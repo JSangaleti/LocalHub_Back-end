@@ -109,6 +109,11 @@ const options = {
                     type: 'object',
                     properties: {
                         id: { type: 'integer', example: 1 },
+                        cnpj: {
+                            type: 'string',
+                            example: '11222333000181',
+                            description: 'CNPJ da loja, salvo apenas com números.'
+                        },
                         ownerUserId: { type: 'integer', example: 2 },
                         categoryId: { type: 'integer', example: 3 },
                         name: { type: 'string', example: 'Burger House' },
@@ -193,10 +198,15 @@ const options = {
 
                 StoreCreateRequest: {
                     type: 'object',
-                    required: ['ownerUserId', 'categoryId', 'name'],
+                    required: ['ownerUserId', 'categoryId', 'cnpj', 'name'],
                     properties: {
                         ownerUserId: { type: 'integer', example: 2 },
                         categoryId: { type: 'integer', example: 3 },
+                        cnpj: {
+                            type: 'string',
+                            example: '11.222.333/0001-81',
+                            description: 'CNPJ da loja. Pode ser enviado com ou sem máscara; será salvo apenas com números.'
+                        },
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
 
