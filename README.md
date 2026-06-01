@@ -12,7 +12,8 @@ O backend do LocalHub é responsável por fornecer a infraestrutura da aplicaç�
 - organização por categorias;
 - disponibilização de publicações para o feed;
 - integração com banco de dados PostgreSQL;
-- documentação da API com Swagger.
+- documentação da API com Swagger;
+- geocodificação reversa para sugerir endereço a partir de latitude/longitude.
 
 A documentação técnica complementar fica em:
 
@@ -23,6 +24,39 @@ docs/
 └── database.md
 ```
 
+## Sumário
+
+- [LocalHub - Backend](#localhub---backend)
+  - [Sobre](#sobre)
+  - [Sumário](#sumário)
+  - [Tecnologias utilizadas](#tecnologias-utilizadas)
+  - [Como executar com Docker](#como-executar-com-docker)
+    - [1. Clone o repositório](#1-clone-o-repositório)
+    - [2. Suba a API e o banco](#2-suba-a-api-e-o-banco)
+    - [3. Inicialize o banco de dados](#3-inicialize-o-banco-de-dados)
+    - [4. Acesse a aplicação](#4-acesse-a-aplicação)
+    - [Conta administrador (seed)](#conta-administrador-seed)
+    - [5. Ver logs](#5-ver-logs)
+    - [6. Parar os containers](#6-parar-os-containers)
+    - [7. Resetar o banco local](#7-resetar-o-banco-local)
+  - [Como executar em modo local](#como-executar-em-modo-local)
+    - [1. Instale as dependências](#1-instale-as-dependências)
+    - [2. Configure o arquivo `.env`](#2-configure-o-arquivo-env)
+    - [Variáveis de geocodificação](#variáveis-de-geocodificação)
+    - [3. Suba somente o PostgreSQL](#3-suba-somente-o-postgresql)
+    - [4. Inicialize o banco](#4-inicialize-o-banco)
+    - [5. Inicie a API em desenvolvimento](#5-inicie-a-api-em-desenvolvimento)
+  - [Variáveis de ambiente](#variáveis-de-ambiente)
+  - [Banco de dados](#banco-de-dados)
+  - [Geocodificação reversa](#geocodificação-reversa)
+    - [Endpoint](#endpoint)
+    - [Exemplo de uso](#exemplo-de-uso)
+    - [Exemplo de resposta](#exemplo-de-resposta)
+    - [Possíveis erros](#possíveis-erros)
+    - [Cuidados de uso](#cuidados-de-uso)
+  - [Documentação da API](#documentação-da-api)
+  - [Documentação técnica](#documentação-técnica)
+
 ## Tecnologias utilizadas
 
 - **Node.js**
@@ -31,6 +65,7 @@ docs/
 - **Swagger**
 - **Docker**
 - **Docker Compose**
+- **OpenStreetMap/Nominatim**
 
 ## Como executar com Docker
 
@@ -82,10 +117,10 @@ Esse comando aplica as migrations e executa o seed inicial no banco.
 
 Após `npm run db:init` ou `npm run db:seed`, o sistema possui um único usuário administrador:
 
-| Campo | Valor |
-|-------|-------|
+| Campo  | Valor             |
+| ------ | ----------------- |
 | E-mail | `admin@admin.com` |
-| Senha | `admin123` |
+| Senha  | `admin123`        |
 
 Não é possível criar outro usuário `admin` pelo cadastro público (`POST /api/auth/register`).
 
@@ -146,9 +181,23 @@ DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=localhubdb
+
+NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org
+NOMINATIM_USER_AGENT=LocalHub_Back-end/1.0 (https://github.com/JSangaleti/LocalHub_Back-end)
 ```
 
 Em modo local, o `DB_HOST` deve ser `localhost`, pois a aplicação está rodando fora do Docker.
+
+### Variáveis de geocodificação
+
+A geocodificação reversa usa OpenStreetMap/Nominatim.
+
+| Variável               | Obrigatória | Valor padrão                                                              | Função                                              |
+| ---------------------- | ----------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
+| `NOMINATIM_BASE_URL`   | Não         | `https://nominatim.openstreetmap.org`                                     | URL base do serviço de geocodificação reversa.      |
+| `NOMINATIM_USER_AGENT` | Não         | `LocalHub_Back-end/1.0 (https://github.com/JSangaleti/LocalHub_Back-end)` | Identificação enviada ao Nominatim nas requisições. |
+
+Mesmo tendo valor padrão no código, é recomendado configurar `NOMINATIM_USER_AGENT` de forma identificável, principalmente em ambientes compartilhados.
 
 ### 3. Suba somente o PostgreSQL
 
@@ -237,6 +286,75 @@ npm run db:init
 
 ---
 
+## Geocodificação reversa
+
+O backend possui um endpoint auxiliar para sugerir endereço a partir de latitude e longitude.
+
+Esse recurso foi pensado para o fluxo do frontend em que o usuário seleciona um ponto no mapa. Depois que o ponto é confirmado, o app envia as coordenadas para o backend, e a API retorna uma sugestão de endereço estruturado.
+
+### Endpoint
+
+```http
+GET /api/locations/reverse?lat=-24.0463&lng=-52.3780
+```
+
+Parâmetros:
+
+| Parâmetro | Obrigatório | Descrição                                                        |
+| --------- | ----------- | ---------------------------------------------------------------- |
+| `lat`     | Sim         | Latitude do ponto selecionado. Deve estar entre `-90` e `90`.    |
+| `lng`     | Sim         | Longitude do ponto selecionado. Deve estar entre `-180` e `180`. |
+
+Também é aceito `lon` como alternativa para `lng`.
+
+### Exemplo de uso
+
+```bash
+curl "http://localhost:3000/api/locations/reverse?lat=-24.0463&lng=-52.3780"
+```
+
+### Exemplo de resposta
+
+```json
+{
+  "address": "Rua Brasil",
+  "addressNumber": null,
+  "neighborhood": "Centro",
+  "city": "Campo Mourão",
+  "state": "PR",
+  "postalCode": "87300-000",
+  "country": "Brasil",
+  "latitude": -24.0463,
+  "longitude": -52.378,
+  "formattedAddress": "Rua Brasil - Centro - Campo Mourão - PR",
+  "provider": {
+    "name": "Nominatim",
+    "displayName": "Rua Brasil, Centro, Campo Mourão, Paraná, Brasil",
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0."
+  }
+}
+```
+
+### Possíveis erros
+
+| Status | Quando ocorre                                                      |
+| ------ | ------------------------------------------------------------------ |
+| `400`  | `lat` ou `lng` ausente, inválido ou fora da faixa permitida.       |
+| `404`  | O provedor não encontrou endereço para as coordenadas informadas.  |
+| `429`  | O limite de requisições do serviço de geocodificação foi atingido. |
+| `502`  | O serviço externo de geocodificação está indisponível.             |
+| `500`  | Erro interno ao processar a geocodificação reversa.                |
+
+### Cuidados de uso
+
+- Chame esse endpoint apenas quando o usuário confirmar o ponto no mapa.
+- Não chame esse endpoint continuamente durante o arraste do mapa.
+- O endereço retornado é uma sugestão e pode precisar de correção manual.
+- O número do estabelecimento deve ser confirmado ou preenchido pelo usuário.
+- O backend usa cache simples em memória para reduzir chamadas repetidas ao serviço externo.
+
+---
+
 ## Documentação da API
 
 Todos os endpoints estão documentados no Swagger:
@@ -254,6 +372,8 @@ As rotas principais são registradas a partir de `/api`:
 /api/categories
 /api/stores
 /api/posts
+/api/uploads
+/api/locations/reverse
 ```
 
 ---
