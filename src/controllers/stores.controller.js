@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { normalizeCnpj, isValidCnpj } = require('../utils/cnpj');
 
 const parsePositiveInteger = (value) => {
   const parsed = Number.parseInt(value, 10);
@@ -103,6 +104,26 @@ const mapStoreResponse = (store) => {
   };
 };
 
+const validateAndNormalizeCnpj = (cnpj) => {
+  const normalizedCnpj = normalizeCnpj(cnpj);
+
+  if (!normalizedCnpj) {
+    return {
+      error: 'CNPJ é obrigatório.'
+    };
+  }
+
+  if (!isValidCnpj(normalizedCnpj)) {
+    return {
+      error: 'CNPJ inválido.'
+    };
+  }
+
+  return {
+    cnpj: normalizedCnpj
+  };
+};
+
 const storesController = {
   getAll: async (req, res) => {
     try {
@@ -110,6 +131,7 @@ const storesController = {
         `
           SELECT
             s.id,
+            s.cnpj,
             s.owner_user_id AS "ownerUserId",
             s.category_id AS "categoryId",
             s.name,
@@ -146,6 +168,7 @@ const storesController = {
       const {
         ownerUserId,
         categoryId,
+        cnpj,
         name,
         description,
         address,
@@ -167,6 +190,14 @@ const storesController = {
         });
       }
 
+      const cnpjValidation = validateAndNormalizeCnpj(cnpj);
+
+      if (cnpjValidation.error) {
+        return res.status(400).json({
+          message: cnpjValidation.error
+        });
+      }
+
       const coordinates = validateCoordinates(latitude, longitude);
 
       if (coordinates.error) {
@@ -180,6 +211,7 @@ const storesController = {
     INSERT INTO stores (
       owner_user_id,
       category_id,
+      cnpj,
       name,
       description,
       address,
@@ -197,6 +229,7 @@ const storesController = {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     RETURNING
       id,
+      cnpj,
       owner_user_id AS "ownerUserId",
       category_id AS "categoryId",
       name,
@@ -216,6 +249,7 @@ const storesController = {
         [
           ownerUserId,
           categoryId,
+          cnpjValidation.cnpj,
           name,
           description ?? null,
           address ?? null,
@@ -241,6 +275,12 @@ const storesController = {
         return res.status(400).json({
           message: 'ownerUserId ou categoryId inválido.'
         });
+
+        if (error.code === '23505' && error.constraint === 'uq_stores_cnpj') {
+          return res.status(409).json({
+            message: 'CNPJ já cadastrado.'
+          });
+        }
       }
 
       return res.status(500).json({
@@ -262,6 +302,7 @@ const storesController = {
         `
         SELECT
           s.id,
+          s.cnpj,
           s.owner_user_id AS "ownerUserId",
           s.category_id AS "categoryId",
           s.name,
@@ -311,6 +352,7 @@ const storesController = {
       const {
         ownerUserId,
         categoryId,
+        cnpj,
         name,
         description,
         address,
@@ -328,6 +370,19 @@ const storesController = {
 
       const updates = [];
       const values = [];
+
+      if (cnpj !== undefined) {
+        const cnpjValidation = validateAndNormalizeCnpj(cnpj);
+
+        if (cnpjValidation.error) {
+          return res.status(400).json({
+            message: cnpjValidation.error
+          });
+        }
+
+        values.push(cnpjValidation.cnpj);
+        updates.push(`cnpj = $${values.length}`);
+      }
 
       let coordinates = null;
 
@@ -429,6 +484,7 @@ const storesController = {
           WHERE id = $${values.length}
           RETURNING
             id,
+            cnpj,
             owner_user_id AS "ownerUserId",
             category_id AS "categoryId",
             name,
@@ -463,6 +519,12 @@ const storesController = {
         return res.status(400).json({
           message: 'ownerUserId ou categoryId inválido.'
         });
+
+        if (error.code === '23505' && error.constraint === 'uq_stores_cnpj') {
+          return res.status(409).json({
+            message: 'CNPJ já cadastrado.'
+          });
+        }
       }
 
       return res.status(500).json({
