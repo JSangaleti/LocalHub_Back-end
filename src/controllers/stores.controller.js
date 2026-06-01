@@ -226,7 +226,7 @@ const storesController = {
       opening_hours,
       contact
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
     RETURNING
       id,
       cnpj,
@@ -275,12 +275,12 @@ const storesController = {
         return res.status(400).json({
           message: 'ownerUserId ou categoryId inválido.'
         });
+      }
 
-        if (error.code === '23505' && error.constraint === 'uq_stores_cnpj') {
-          return res.status(409).json({
-            message: 'CNPJ já cadastrado.'
-          });
-        }
+      if (error.code === '23505' && error.constraint === 'uq_stores_cnpj') {
+        return res.status(409).json({
+          message: 'CNPJ já cadastrado.'
+        });
       }
 
       return res.status(500).json({
@@ -519,12 +519,12 @@ const storesController = {
         return res.status(400).json({
           message: 'ownerUserId ou categoryId inválido.'
         });
+      }
 
-        if (error.code === '23505' && error.constraint === 'uq_stores_cnpj') {
-          return res.status(409).json({
-            message: 'CNPJ já cadastrado.'
-          });
-        }
+      if (error.code === '23505' && error.constraint === 'uq_stores_cnpj') {
+        return res.status(409).json({
+          message: 'CNPJ já cadastrado.'
+        });
       }
 
       return res.status(500).json({

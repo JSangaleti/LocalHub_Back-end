@@ -266,6 +266,11 @@ const options = {
                     properties: {
                         ownerUserId: { type: 'integer', example: 2 },
                         categoryId: { type: 'integer', example: 3 },
+                        cnpj: {
+                            type: 'string',
+                            example: '11.222.333/0001-81',
+                            description: 'CNPJ da loja. Pode ser enviado com ou sem máscara; será salvo apenas com números.'
+                        },
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
 
