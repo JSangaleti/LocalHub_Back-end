@@ -21,7 +21,8 @@ const options = {
             { name: 'Users', description: 'Gerenciamento de usuários' },
             { name: 'Categories', description: 'Gerenciamento de categorias' },
             { name: 'Stores', description: 'Gerenciamento de lojas' },
-            { name: 'Posts', description: 'Gerenciamento de posts' }
+            { name: 'Posts', description: 'Gerenciamento de posts' },
+            { name: 'Locations', description: 'Recursos auxiliares de localização e geocodificação' }
         ],
         components: {
             schemas: {
@@ -423,6 +424,82 @@ const options = {
                     properties: {
                         success: { type: 'boolean', example: true },
                         message: { type: 'string', example: 'API funcionando normalmente' }
+                    }
+                },
+                LocationReverseResponse: {
+                    type: 'object',
+                    properties: {
+                        address: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Rua Brasil',
+                            description: 'Rua ou logradouro sugerido a partir das coordenadas.'
+                        },
+                        addressNumber: {
+                            type: 'string',
+                            nullable: true,
+                            example: '123',
+                            description: 'Número sugerido pelo provedor, quando disponível. Deve ser confirmado pelo usuário.'
+                        },
+                        neighborhood: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Centro'
+                        },
+                        city: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Campo Mourão'
+                        },
+                        state: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'PR'
+                        },
+                        postalCode: {
+                            type: 'string',
+                            nullable: true,
+                            example: '87300-000'
+                        },
+                        country: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Brasil'
+                        },
+                        latitude: {
+                            type: 'number',
+                            format: 'double',
+                            example: -24.0463
+                        },
+                        longitude: {
+                            type: 'number',
+                            format: 'double',
+                            example: -52.378
+                        },
+                        formattedAddress: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Rua Brasil, 123 - Centro - Campo Mourão - PR'
+                        },
+                        provider: {
+                            type: 'object',
+                            properties: {
+                                name: {
+                                    type: 'string',
+                                    example: 'Nominatim'
+                                },
+                                displayName: {
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'Rua Brasil, Centro, Campo Mourão, Paraná, Brasil'
+                                },
+                                licence: {
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'Data © OpenStreetMap contributors, ODbL 1.0.'
+                                }
+                            }
+                        }
                     }
                 }
             },
