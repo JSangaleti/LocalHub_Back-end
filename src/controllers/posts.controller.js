@@ -28,10 +28,10 @@ const postsController = {
 
       const params = [];
 
-      // Filtro de busca por título ou descrição
+      // Filtro de busca por título, descrição ou nome da loja
       if (search && search.trim()) {
-        query += ` AND (p.title ILIKE $${params.length + 1} OR p.description ILIKE $${params.length + 2})`;
-        params.push(`%${search.trim()}%`, `%${search.trim()}%`);
+        query += ` AND (p.title ILIKE $${params.length + 1} OR p.description ILIKE $${params.length + 2} OR s.name ILIKE $${params.length + 3})`;
+        params.push(`%${search.trim()}%`, `%${search.trim()}%`, `%${search.trim()}%`);
       }
 
       // Filtro por categoria
