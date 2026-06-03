@@ -73,6 +73,7 @@ const postInteractionsController = {
 
       return res.status(201).json({
         message: 'Curtida registrada.',
+        engagement,
         ...engagement
       });
     } catch (error) {
@@ -103,6 +104,7 @@ const postInteractionsController = {
 
       return res.status(200).json({
         message: 'Curtida removida.',
+        engagement,
         ...engagement
       });
     } catch (error) {
@@ -205,7 +207,7 @@ const postInteractionsController = {
           ...rows[0],
           userName: userRows[0]?.name ?? 'Usuário'
         },
-        ...engagement
+        engagement
       });
     } catch (error) {
       return res.status(500).json({

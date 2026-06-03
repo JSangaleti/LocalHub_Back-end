@@ -1,15 +1,15 @@
 ALTER TABLE
     stores
-ADD
-    COLUMN cnpj VARCHAR(14);
+ADD COLUMN IF NOT EXISTS
+    cnpj VARCHAR(14);
 
+-- Preenche CNPJ placeholder único para lojas existentes antes de NOT NULL
 UPDATE
     stores
 SET
-    cnpj = '11222333000181'
+    cnpj = LPAD(id::text, 14, '0')
 WHERE
-    name = 'Mundo da Panela'
-    AND cnpj IS NULL;
+    cnpj IS NULL;
 
 ALTER TABLE
     stores
