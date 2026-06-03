@@ -5,10 +5,26 @@ const parsePositiveInteger = (value) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
+const engagementSelect = (userId, startParamIndex) => {
+  const likedByMe = userId
+    ? `EXISTS(
+        SELECT 1 FROM post_likes pl
+        WHERE pl.post_id = p.id AND pl.user_id = $${startParamIndex}
+      ) AS "likedByMe"`
+    : 'false AS "likedByMe"';
+
+  return `
+    COALESCE((SELECT COUNT(*)::int FROM post_likes pl WHERE pl.post_id = p.id), 0) AS likes,
+    COALESCE((SELECT COUNT(*)::int FROM post_comments pc WHERE pc.post_id = p.id), 0) AS comments,
+    ${likedByMe}
+  `;
+};
+
 const postsController = {
   getAll: async (req, res) => {
     try {
-      const { search, categoryId, storeId, limit = 20, offset = 0 } = req.query;
+      const { search, categoryId, storeId, userId, limit = 20, offset = 0 } = req.query;
+      const userIdParsed = parsePositiveInteger(userId);
 
       let query = `
         SELECT
@@ -19,7 +35,8 @@ const postsController = {
           c.name AS category,
           p.title,
           p.description,
-          p.image_url AS "imageUrl"
+          p.image_url AS "imageUrl",
+          ${engagementSelect(userIdParsed, 'PARAM')}
         FROM posts p
         JOIN stores s ON s.id = p.store_id
         LEFT JOIN categories c ON c.id = p.category_id
@@ -27,6 +44,10 @@ const postsController = {
       `;
 
       const params = [];
+      if (userIdParsed) {
+        params.push(userIdParsed);
+      }
+      query = query.replace('PARAM', userIdParsed ? String(params.length) : '0');
 
       // Filtro de busca por título, descrição ou nome da loja
       if (search && search.trim()) {
@@ -125,11 +146,17 @@ const postsController = {
   getById: async (req, res) => {
     try {
       const id = parsePositiveInteger(req.params.id);
+      const userIdParsed = parsePositiveInteger(req.query.userId);
 
       if (!id) {
         return res.status(400).json({
           message: 'ID inválido.'
         });
+      }
+
+      const params = [id];
+      if (userIdParsed) {
+        params.push(userIdParsed);
       }
 
       const { rows } = await pool.query(
@@ -142,13 +169,14 @@ const postsController = {
             c.name AS category,
             p.title,
             p.description,
-            p.image_url AS "imageUrl"
+            p.image_url AS "imageUrl",
+            ${engagementSelect(userIdParsed, userIdParsed ? 2 : 0)}
           FROM posts p
           JOIN stores s ON s.id = p.store_id
           LEFT JOIN categories c ON c.id = p.category_id
           WHERE p.id = $1
         `,
-        [id]
+        params
       );
 
       if (rows.length === 0) {

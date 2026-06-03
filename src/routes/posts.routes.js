@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const postsController = require('../controllers/posts.controller');
+const postInteractionsController = require('../controllers/post-interactions.controller');
 
 const router = Router();
 
@@ -88,6 +89,11 @@ router.get('/', postsController.getAll);
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/', postsController.create);
+
+router.post('/:id/likes', postInteractionsController.addLike);
+router.delete('/:id/likes', postInteractionsController.removeLike);
+router.get('/:id/comments', postInteractionsController.getComments);
+router.post('/:id/comments', postInteractionsController.addComment);
 
 /**
  * @swagger
