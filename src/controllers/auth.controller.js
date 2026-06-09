@@ -157,6 +157,112 @@ const authController = {
         error: error.message
       });
     }
+  },
+
+  forgotPassword: async (req, res) => {
+    try {
+      const email = typeof req.body.email === 'string'
+        ? req.body.email.trim().toLowerCase()
+        : '';
+
+      if (!email) {
+        return res.status(400).json({ message: 'Informe o e-mail da conta.' });
+      }
+
+      const { rows } = await pool.query(
+        'SELECT id FROM users WHERE email = $1 LIMIT 1',
+        [email]
+      );
+
+      if (rows.length === 0) {
+        return res.status(200).json({
+          message: 'Se o e-mail estiver cadastrado, um código será gerado.'
+        });
+      }
+
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      await pool.query(
+        `
+          INSERT INTO password_reset_codes (user_id, code, expires_at)
+          VALUES ($1, $2, NOW() + INTERVAL '15 minutes')
+        `,
+        [rows[0].id, code]
+      );
+
+      return res.status(200).json({
+        message: 'Código gerado. Ele expira em 15 minutos.',
+        code
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: 'Erro ao iniciar recuperação de senha.',
+        error: error.message
+      });
+    }
+  },
+
+  resetPassword: async (req, res) => {
+    try {
+      const email = typeof req.body.email === 'string'
+        ? req.body.email.trim().toLowerCase()
+        : '';
+      const code = typeof req.body.code === 'string' ? req.body.code.trim() : '';
+      const { newPassword } = req.body;
+      const passwordError = validatePassword(newPassword);
+
+      if (!email || !code) {
+        return res.status(400).json({ message: 'E-mail e código são obrigatórios.' });
+      }
+      if (passwordError) {
+        return res.status(400).json({ message: passwordError });
+      }
+
+      const { rows } = await pool.query(
+        `
+          SELECT prc.id, prc.user_id AS "userId"
+          FROM password_reset_codes prc
+          JOIN users u ON u.id = prc.user_id
+          WHERE u.email = $1
+            AND prc.code = $2
+            AND prc.used_at IS NULL
+            AND prc.expires_at > NOW()
+          ORDER BY prc.created_at DESC
+          LIMIT 1
+        `,
+        [email, code]
+      );
+
+      if (rows.length === 0) {
+        return res.status(400).json({ message: 'Código inválido ou expirado.' });
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query(
+          'UPDATE users SET password = $1 WHERE id = $2',
+          [passwordHash, rows[0].userId]
+        );
+        await client.query(
+          'UPDATE password_reset_codes SET used_at = NOW() WHERE id = $1',
+          [rows[0].id]
+        );
+        await client.query('COMMIT');
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+
+      return res.status(200).json({ message: 'Senha alterada com sucesso.' });
+    } catch (error) {
+      return res.status(500).json({
+        message: 'Erro ao redefinir senha.',
+        error: error.message
+      });
+    }
   }
 };
 
