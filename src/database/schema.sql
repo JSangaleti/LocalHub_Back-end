@@ -45,7 +45,9 @@ CREATE TABLE IF NOT EXISTS stores (
   description TEXT,
   address VARCHAR(220),
   opening_hours VARCHAR(120),
-  contact VARCHAR(80)
+  contact VARCHAR(80),
+  profile_image_url TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- Tabela: posts
@@ -56,7 +58,8 @@ CREATE TABLE IF NOT EXISTS posts (
   category_id INT REFERENCES categories(id) ON DELETE SET NULL,
   title VARCHAR(160) NOT NULL,
   description TEXT NOT NULL,
-  image_url TEXT
+  image_url TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -85,6 +88,29 @@ CREATE TABLE IF NOT EXISTS post_comments (
 CREATE INDEX IF NOT EXISTS idx_post_likes_post_id ON post_likes(post_id);
 CREATE INDEX IF NOT EXISTS idx_post_likes_user_id ON post_likes(user_id);
 CREATE INDEX IF NOT EXISTS idx_post_comments_post_id ON post_comments(post_id);
+
+CREATE TABLE IF NOT EXISTS password_reset_codes (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code VARCHAR(6) NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id BIGSERIAL PRIMARY KEY,
+  recipient_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  actor_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  interaction_type VARCHAR(30) NOT NULL,
+  message TEXT NOT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient
+  ON notifications(recipient_user_id, created_at DESC);
 
 DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
 CREATE TRIGGER trg_users_updated_at

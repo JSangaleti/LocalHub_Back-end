@@ -6,6 +6,22 @@ const parsePositiveInteger = (value) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
+const canManageStore = async (storeId, actingUserId) => {
+  const userId = parsePositiveInteger(actingUserId);
+  if (!userId) return false;
+  const { rows } = await pool.query(
+    `
+      SELECT 1
+      FROM stores s
+      JOIN users u ON u.id = $2
+      WHERE s.id = $1
+        AND (s.owner_user_id = $2 OR u.user_type = 'admin')
+    `,
+    [storeId, userId]
+  );
+  return rows.length > 0;
+};
+
 const parseCoordinate = (value) => {
   if (value === undefined || value === null || value === '') {
     return null;
@@ -127,6 +143,18 @@ const validateAndNormalizeCnpj = (cnpj) => {
 const storesController = {
   getAll: async (req, res) => {
     try {
+      const ownerUserId = parsePositiveInteger(req.query.ownerUserId);
+      if (req.query.ownerUserId !== undefined && !ownerUserId) {
+        return res.status(400).json({
+          message: 'ownerUserId inválido.'
+        });
+      }
+      const params = [];
+      let where = '';
+      if (ownerUserId) {
+        params.push(ownerUserId);
+        where = 'WHERE s.owner_user_id = $1';
+      }
       const { rows } = await pool.query(
         `
           SELECT
@@ -147,11 +175,15 @@ const storesController = {
             s.latitude,
             s.longitude,
             s.opening_hours AS "openingHours",
-            s.contact
+            s.contact,
+            s.profile_image_url AS "profileImageUrl",
+            s.is_active AS "isActive"
           FROM stores s
           LEFT JOIN categories c ON c.id = s.category_id
+          ${where}
           ORDER BY s.name ASC, s.id ASC
-        `
+        `,
+        params
       );
 
       return res.status(200).json(rows.map(mapStoreResponse));
@@ -181,12 +213,29 @@ const storesController = {
         latitude,
         longitude,
         openingHours,
-        contact
+        contact,
+        profileImageUrl,
+        actingUserId
       } = req.body;
 
       if (!ownerUserId || !categoryId || !name) {
         return res.status(400).json({
           message: 'ownerUserId, categoryId e name são obrigatórios.'
+        });
+      }
+
+      const actorId = parsePositiveInteger(actingUserId);
+      const ownerId = parsePositiveInteger(ownerUserId);
+      const { rows: actorRows } = actorId
+        ? await pool.query('SELECT user_type FROM users WHERE id = $1', [actorId])
+        : { rows: [] };
+      if (
+        !actorId
+        || !ownerId
+        || (actorId !== ownerId && actorRows[0]?.user_type !== 'admin')
+      ) {
+        return res.status(403).json({
+          message: 'Você não tem permissão para criar uma loja para este usuário.'
         });
       }
 
@@ -245,6 +294,8 @@ const storesController = {
       longitude,
       opening_hours AS "openingHours",
       contact
+      , profile_image_url AS "profileImageUrl"
+      , is_active AS "isActive"
   `,
         [
           ownerUserId,
@@ -265,6 +316,25 @@ const storesController = {
           contact ?? null
         ]
       );
+
+      if (profileImageUrl) {
+        const { rows: imageRows } = await pool.query(
+          `
+            UPDATE stores
+            SET profile_image_url = $1
+            WHERE id = $2
+            RETURNING
+              id, cnpj, owner_user_id AS "ownerUserId",
+              category_id AS "categoryId", name, description, address,
+              address_number AS "addressNumber", neighborhood, city, state,
+              postal_code AS "postalCode", country, latitude, longitude,
+              opening_hours AS "openingHours", contact,
+              profile_image_url AS "profileImageUrl", is_active AS "isActive"
+          `,
+          [profileImageUrl, rows[0].id]
+        );
+        rows[0] = imageRows[0];
+      }
 
       return res.status(201).json({
         message: 'Loja cadastrada com sucesso.',
@@ -318,7 +388,9 @@ const storesController = {
           s.latitude,
           s.longitude,
           s.opening_hours AS "openingHours",
-          s.contact
+          s.contact,
+          s.profile_image_url AS "profileImageUrl",
+          s.is_active AS "isActive"
         FROM stores s
         LEFT JOIN categories c ON c.id = s.category_id
         WHERE s.id = $1
@@ -365,8 +437,17 @@ const storesController = {
         latitude,
         longitude,
         openingHours,
-        contact
+        contact,
+        profileImageUrl,
+        isActive,
+        actingUserId
       } = req.body;
+
+      if (!(await canManageStore(id, actingUserId))) {
+        return res.status(403).json({
+          message: 'Apenas o dono da loja ou um administrador pode editá-la.'
+        });
+      }
 
       const updates = [];
       const values = [];
@@ -429,6 +510,16 @@ const storesController = {
       if (contact !== undefined) {
         values.push(contact);
         updates.push(`contact = $${values.length}`);
+      }
+
+      if (profileImageUrl !== undefined) {
+        values.push(profileImageUrl || null);
+        updates.push(`profile_image_url = $${values.length}`);
+      }
+
+      if (isActive !== undefined) {
+        values.push(Boolean(isActive));
+        updates.push(`is_active = $${values.length}`);
       }
 
       if (addressNumber !== undefined) {
@@ -499,7 +590,9 @@ const storesController = {
             latitude,
             longitude,
             opening_hours AS "openingHours",
-            contact
+            contact,
+            profile_image_url AS "profileImageUrl",
+            is_active AS "isActive"
         `,
         values
       );
