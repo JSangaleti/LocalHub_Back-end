@@ -74,7 +74,8 @@ const authController = {
             id,
             name,
             email,
-            user_type AS "userType"
+            user_type AS "userType",
+            image_url AS "profileImageUrl"
         `,
         [name.trim(), normalizedEmail, passwordHash, normalizedUserType]
       );
@@ -116,7 +117,8 @@ const authController = {
             name,
             email,
             password,
-            user_type AS "userType"
+            user_type AS "userType",
+            image_url AS "profileImageUrl"
           FROM users
           WHERE email = $1
           LIMIT 1
@@ -144,7 +146,8 @@ const authController = {
         id: userRecord.id,
         name: userRecord.name,
         email: userRecord.email,
-        userType: userRecord.userType
+        userType: userRecord.userType,
+        profileImageUrl: userRecord.profileImageUrl ?? null
       };
 
       return res.status(200).json({

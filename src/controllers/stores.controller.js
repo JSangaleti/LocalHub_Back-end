@@ -147,7 +147,8 @@ const storesController = {
             s.latitude,
             s.longitude,
             s.opening_hours AS "openingHours",
-            s.contact
+            s.contact,
+            s.image_url AS "profileImageUrl"
           FROM stores s
           LEFT JOIN categories c ON c.id = s.category_id
           ORDER BY s.name ASC, s.id ASC
@@ -244,7 +245,8 @@ const storesController = {
       latitude,
       longitude,
       opening_hours AS "openingHours",
-      contact
+      contact,
+      image_url AS "profileImageUrl"
   `,
         [
           ownerUserId,
@@ -318,7 +320,8 @@ const storesController = {
           s.latitude,
           s.longitude,
           s.opening_hours AS "openingHours",
-          s.contact
+          s.contact,
+          s.image_url AS "profileImageUrl"
         FROM stores s
         LEFT JOIN categories c ON c.id = s.category_id
         WHERE s.id = $1
@@ -499,7 +502,8 @@ const storesController = {
             latitude,
             longitude,
             opening_hours AS "openingHours",
-            contact
+            contact,
+            image_url AS "profileImageUrl"
         `,
         values
       );

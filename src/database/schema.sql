@@ -16,13 +16,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Tabela: users
--- id, name, email, password, user_type, created_at, updated_at
+-- id, name, email, password, user_type, image_url, created_at, updated_at
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(120) NOT NULL,
   email VARCHAR(160) NOT NULL UNIQUE,
   password TEXT NOT NULL,
   user_type user_type_enum NOT NULL DEFAULT 'cliente',
+  image_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 -- Tabela: stores
--- id, owner_user_id, category_id, name, description, address, opening_hours, contact
+-- id, owner_user_id, category_id, name, description, address, opening_hours, contact, image_url
 CREATE TABLE IF NOT EXISTS stores (
   id BIGSERIAL PRIMARY KEY,
   owner_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -45,7 +46,8 @@ CREATE TABLE IF NOT EXISTS stores (
   description TEXT,
   address VARCHAR(220),
   opening_hours VARCHAR(120),
-  contact VARCHAR(80)
+  contact VARCHAR(80),
+  image_url TEXT
 );
 
 -- Tabela: posts
@@ -85,6 +87,10 @@ CREATE TABLE IF NOT EXISTS post_comments (
 CREATE INDEX IF NOT EXISTS idx_post_likes_post_id ON post_likes(post_id);
 CREATE INDEX IF NOT EXISTS idx_post_likes_user_id ON post_likes(user_id);
 CREATE INDEX IF NOT EXISTS idx_post_comments_post_id ON post_comments(post_id);
+
+-- Migração: adiciona image_url em bancos já existentes
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS image_url TEXT;
 
 DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
 CREATE TRIGGER trg_users_updated_at
