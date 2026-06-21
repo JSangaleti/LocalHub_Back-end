@@ -21,7 +21,8 @@ const options = {
             { name: 'Users', description: 'Gerenciamento de usuários' },
             { name: 'Categories', description: 'Gerenciamento de categorias' },
             { name: 'Stores', description: 'Gerenciamento de lojas' },
-            { name: 'Posts', description: 'Gerenciamento de posts' }
+            { name: 'Posts', description: 'Gerenciamento de posts' },
+            { name: 'Locations', description: 'Recursos auxiliares de localização e geocodificação' }
         ],
         components: {
             schemas: {
@@ -108,6 +109,11 @@ const options = {
                     type: 'object',
                     properties: {
                         id: { type: 'integer', example: 1 },
+                        cnpj: {
+                            type: 'string',
+                            example: '11222333000181',
+                            description: 'CNPJ da loja, salvo apenas com números.'
+                        },
                         ownerUserId: { type: 'integer', example: 2 },
                         categoryId: { type: 'integer', example: 3 },
                         name: { type: 'string', example: 'Burger House' },
@@ -192,10 +198,15 @@ const options = {
 
                 StoreCreateRequest: {
                     type: 'object',
-                    required: ['ownerUserId', 'categoryId', 'name'],
+                    required: ['ownerUserId', 'categoryId', 'cnpj', 'name'],
                     properties: {
                         ownerUserId: { type: 'integer', example: 2 },
                         categoryId: { type: 'integer', example: 3 },
+                        cnpj: {
+                            type: 'string',
+                            example: '11.222.333/0001-81',
+                            description: 'CNPJ da loja. Pode ser enviado com ou sem máscara; será salvo apenas com números.'
+                        },
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
 
@@ -255,6 +266,11 @@ const options = {
                     properties: {
                         ownerUserId: { type: 'integer', example: 2 },
                         categoryId: { type: 'integer', example: 3 },
+                        cnpj: {
+                            type: 'string',
+                            example: '11.222.333/0001-81',
+                            description: 'CNPJ da loja. Pode ser enviado com ou sem máscara; será salvo apenas com números.'
+                        },
                         name: { type: 'string', example: 'Burger House' },
                         description: { type: 'string', example: 'Hamburgueria artesanal' },
 
@@ -423,6 +439,82 @@ const options = {
                     properties: {
                         success: { type: 'boolean', example: true },
                         message: { type: 'string', example: 'API funcionando normalmente' }
+                    }
+                },
+                LocationReverseResponse: {
+                    type: 'object',
+                    properties: {
+                        address: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Rua Brasil',
+                            description: 'Rua ou logradouro sugerido a partir das coordenadas.'
+                        },
+                        addressNumber: {
+                            type: 'string',
+                            nullable: true,
+                            example: '123',
+                            description: 'Número sugerido pelo provedor, quando disponível. Deve ser confirmado pelo usuário.'
+                        },
+                        neighborhood: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Centro'
+                        },
+                        city: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Campo Mourão'
+                        },
+                        state: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'PR'
+                        },
+                        postalCode: {
+                            type: 'string',
+                            nullable: true,
+                            example: '87300-000'
+                        },
+                        country: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Brasil'
+                        },
+                        latitude: {
+                            type: 'number',
+                            format: 'double',
+                            example: -24.0463
+                        },
+                        longitude: {
+                            type: 'number',
+                            format: 'double',
+                            example: -52.378
+                        },
+                        formattedAddress: {
+                            type: 'string',
+                            nullable: true,
+                            example: 'Rua Brasil, 123 - Centro - Campo Mourão - PR'
+                        },
+                        provider: {
+                            type: 'object',
+                            properties: {
+                                name: {
+                                    type: 'string',
+                                    example: 'Nominatim'
+                                },
+                                displayName: {
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'Rua Brasil, Centro, Campo Mourão, Paraná, Brasil'
+                                },
+                                licence: {
+                                    type: 'string',
+                                    nullable: true,
+                                    example: 'Data © OpenStreetMap contributors, ODbL 1.0.'
+                                }
+                            }
+                        }
                     }
                 }
             },
