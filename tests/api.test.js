@@ -82,6 +82,31 @@ describe('LocalHub API', () => {
                 userType: user.userType
             });
             expect(loginResponse.body.user).not.toHaveProperty('password');
+
+            const forgotPasswordResponse = await request(app)
+                .post('/api/auth/forgot-password')
+                .send({ email: user.email })
+                .expect(200);
+
+            expect(forgotPasswordResponse.body.code).toMatch(/^\d{6}$/);
+
+            const newPassword = 'novaSenha123';
+            await request(app)
+                .post('/api/auth/reset-password')
+                .send({
+                    email: user.email,
+                    code: forgotPasswordResponse.body.code,
+                    newPassword
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: user.email,
+                    password: newPassword
+                })
+                .expect(200);
         });
     });
 });

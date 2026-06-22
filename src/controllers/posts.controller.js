@@ -5,6 +5,39 @@ const parsePositiveInteger = (value) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
+const canManagePost = async (postId, actingUserId) => {
+  const userId = parsePositiveInteger(actingUserId);
+  if (!userId) return false;
+  const { rows } = await pool.query(
+    `
+      SELECT 1
+      FROM posts p
+      JOIN stores s ON s.id = p.store_id
+      JOIN users u ON u.id = $2
+      WHERE p.id = $1
+        AND (s.owner_user_id = $2 OR u.user_type = 'admin')
+    `,
+    [postId, userId]
+  );
+  return rows.length > 0;
+};
+
+const canCreateForStore = async (storeId, actingUserId) => {
+  const userId = parsePositiveInteger(actingUserId);
+  if (!userId) return false;
+  const { rows } = await pool.query(
+    `
+      SELECT 1
+      FROM stores s
+      JOIN users u ON u.id = $2
+      WHERE s.id = $1
+        AND (s.owner_user_id = $2 OR u.user_type = 'admin')
+    `,
+    [storeId, userId]
+  );
+  return rows.length > 0;
+};
+
 const engagementSelect = (userId, startParamIndex) => {
   const likedByMe = userId
     ? `EXISTS(
@@ -23,8 +56,34 @@ const engagementSelect = (userId, startParamIndex) => {
 const postsController = {
   getAll: async (req, res) => {
     try {
-      const { search, categoryId, storeId, userId, limit = 20, offset = 0 } = req.query;
+      const {
+        search,
+        categoryId,
+        storeId,
+        userId,
+        includeInactive,
+        limit = 20,
+        offset = 0
+      } = req.query;
       const userIdParsed = parsePositiveInteger(userId);
+      const storeIdParsed = parsePositiveInteger(storeId);
+      let maySeeInactive = false;
+
+      if (includeInactive === 'true' && userIdParsed) {
+        const { rows } = await pool.query(
+          `
+            SELECT u.user_type AS "userType",
+              EXISTS(
+                SELECT 1 FROM stores s
+                WHERE s.id = $2 AND s.owner_user_id = $1
+              ) AS "ownsStore"
+            FROM users u
+            WHERE u.id = $1
+          `,
+          [userIdParsed, storeIdParsed]
+        );
+        maySeeInactive = rows[0]?.userType === 'admin' || rows[0]?.ownsStore === true;
+      }
 
       let query = `
         SELECT
@@ -36,6 +95,7 @@ const postsController = {
           p.title,
           p.description,
           p.image_url AS "imageUrl",
+          p.is_active AS "isActive",
           ${engagementSelect(userIdParsed, 'PARAM')}
         FROM posts p
         JOIN stores s ON s.id = p.store_id
@@ -48,6 +108,10 @@ const postsController = {
         params.push(userIdParsed);
       }
       query = query.replace('PARAM', userIdParsed ? String(params.length) : '0');
+
+      if (!maySeeInactive) {
+        query += ' AND p.is_active = TRUE AND s.is_active = TRUE';
+      }
 
       // Filtro de busca por título, descrição ou nome da loja
       if (search && search.trim()) {
@@ -65,12 +129,9 @@ const postsController = {
       }
 
       // Filtro por loja
-      if (storeId) {
-        const storeIdParsed = parsePositiveInteger(storeId);
-        if (storeIdParsed) {
+      if (storeIdParsed) {
           query += ` AND p.store_id = $${params.length + 1}`;
           params.push(storeIdParsed);
-        }
       }
 
       query += ` ORDER BY p.id DESC`;
@@ -102,11 +163,24 @@ const postsController = {
 
   create: async (req, res) => {
     try {
-      const { storeId, categoryId, title, description, imageUrl } = req.body;
+      const {
+        storeId,
+        categoryId,
+        title,
+        description,
+        imageUrl,
+        actingUserId
+      } = req.body;
 
       if (!storeId || !title || !description) {
         return res.status(400).json({
           message: 'storeId, title e description são obrigatórios.'
+        });
+      }
+
+      if (!(await canCreateForStore(storeId, actingUserId))) {
+        return res.status(403).json({
+          message: 'Apenas o dono da loja pode publicar nela.'
         });
       }
 
@@ -120,7 +194,8 @@ const postsController = {
             category_id AS "categoryId",
             title,
             description,
-            image_url AS "imageUrl"
+            image_url AS "imageUrl",
+            is_active AS "isActive"
         `,
         [storeId, categoryId ?? null, title, description, imageUrl ?? null]
       );
@@ -170,6 +245,7 @@ const postsController = {
             p.title,
             p.description,
             p.image_url AS "imageUrl",
+            p.is_active AS "isActive",
             ${engagementSelect(userIdParsed, userIdParsed ? 2 : 0)}
           FROM posts p
           JOIN stores s ON s.id = p.store_id
@@ -204,7 +280,21 @@ const postsController = {
         });
       }
 
-      const { storeId, categoryId, title, description, imageUrl } = req.body;
+      const {
+        storeId,
+        categoryId,
+        title,
+        description,
+        imageUrl,
+        isActive,
+        actingUserId
+      } = req.body;
+
+      if (!(await canManagePost(id, actingUserId))) {
+        return res.status(403).json({
+          message: 'Apenas o dono da loja ou um administrador pode editar este post.'
+        });
+      }
       const updates = [];
       const values = [];
 
@@ -228,6 +318,10 @@ const postsController = {
         values.push(imageUrl);
         updates.push(`image_url = $${values.length}`);
       }
+      if (isActive !== undefined) {
+        values.push(Boolean(isActive));
+        updates.push(`is_active = $${values.length}`);
+      }
 
       if (updates.length === 0) {
         return res.status(400).json({
@@ -248,7 +342,8 @@ const postsController = {
             category_id AS "categoryId",
             title,
             description,
-            image_url AS "imageUrl"
+            image_url AS "imageUrl",
+            is_active AS "isActive"
         `,
         values
       );

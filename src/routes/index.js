@@ -8,6 +8,7 @@ const categoriesRoutes = require('./categories.routes');
 const usersRoutes = require('./users.routes');
 const uploadsRoutes = require('./uploads.routes');
 const locationsRoutes = require('./locations.routes');
+const notificationsRoutes = require('./notifications.routes');
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.use('/categories', categoriesRoutes);
 router.use('/users', usersRoutes);
 router.use('/uploads', uploadsRoutes);
 router.use('/locations', locationsRoutes);
+router.use('/notifications', notificationsRoutes);
 
 module.exports = router;

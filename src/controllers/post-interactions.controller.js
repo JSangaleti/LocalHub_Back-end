@@ -15,6 +15,36 @@ const userExists = async (userId) => {
   return rows.length > 0;
 };
 
+const createNotification = async (postId, actorUserId, interactionType) => {
+  const { rows } = await pool.query(
+    `
+      SELECT
+        s.owner_user_id AS "ownerUserId",
+        p.title,
+        u.name AS "actorName"
+      FROM posts p
+      JOIN stores s ON s.id = p.store_id
+      JOIN users u ON u.id = $2
+      WHERE p.id = $1
+    `,
+    [postId, actorUserId]
+  );
+  const data = rows[0];
+  if (!data || Number(data.ownerUserId) === Number(actorUserId)) return;
+
+  const action = interactionType === 'like' ? 'curtiu' : 'comentou em';
+  const message = `${data.actorName} ${action} o post "${data.title}".`;
+  await pool.query(
+    `
+      INSERT INTO notifications (
+        recipient_user_id, actor_user_id, post_id, interaction_type, message
+      )
+      VALUES ($1, $2, $3, $4, $5)
+    `,
+    [data.ownerUserId, actorUserId, postId, interactionType, message]
+  );
+};
+
 const getPostEngagement = async (postId, userId = null) => {
   const params = [postId];
   let likedByMeSql = 'false AS "likedByMe"';
@@ -60,7 +90,7 @@ const postInteractionsController = {
         return res.status(400).json({ message: 'userId inválido.' });
       }
 
-      await pool.query(
+      const insertResult = await pool.query(
         `
           INSERT INTO post_likes (post_id, user_id)
           VALUES ($1, $2)
@@ -69,10 +99,15 @@ const postInteractionsController = {
         [postId, userId]
       );
 
+      if (insertResult.rowCount > 0) {
+        await createNotification(postId, userId, 'like');
+      }
+
       const engagement = await getPostEngagement(postId, userId);
 
       return res.status(201).json({
         message: 'Curtida registrada.',
+        engagement,
         ...engagement
       });
     } catch (error) {
@@ -103,6 +138,7 @@ const postInteractionsController = {
 
       return res.status(200).json({
         message: 'Curtida removida.',
+        engagement,
         ...engagement
       });
     } catch (error) {
@@ -199,13 +235,15 @@ const postInteractionsController = {
 
       const engagement = await getPostEngagement(postId, userId);
 
+      await createNotification(postId, userId, 'comment');
+
       return res.status(201).json({
         message: 'Comentário publicado.',
         comment: {
           ...rows[0],
           userName: userRows[0]?.name ?? 'Usuário'
         },
-        ...engagement
+        engagement
       });
     } catch (error) {
       return res.status(500).json({
