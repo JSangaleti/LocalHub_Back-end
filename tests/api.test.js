@@ -3,6 +3,23 @@ const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/config/db');
 
+const generateValidCnpj = () => {
+    const base = Date.now().toString().slice(-8).padStart(8, '0') + '0001';
+    const calculateDigit = (value, weights) => {
+        const sum = value
+            .split('')
+            .reduce((total, digit, index) => total + Number(digit) * weights[index], 0);
+        const remainder = sum % 11;
+        return remainder < 2 ? 0 : 11 - remainder;
+    };
+    const firstDigit = calculateDigit(base, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+    const secondDigit = calculateDigit(
+        `${base}${firstDigit}`,
+        [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+    );
+    return `${base}${firstDigit}${secondDigit}`;
+};
+
 describe('LocalHub API', () => {
     afterAll(async () => {
         await pool.end();
@@ -107,6 +124,27 @@ describe('LocalHub API', () => {
                     password: newPassword
                 })
                 .expect(200);
+
+            const storeResponse = await request(app)
+                .post('/api/stores')
+                .send({
+                    ownerUserId: registerResponse.body.user.id,
+                    categoryId: 1,
+                    cnpj: generateValidCnpj(),
+                    name: 'Loja Teste Upload',
+                    actingUserId: registerResponse.body.user.id
+                })
+                .expect(201);
+
+            const uploadResponse = await request(app)
+                .post(`/api/uploads/stores/${storeResponse.body.store.id}`)
+                .attach('file', Buffer.from('fake image'), 'store-test.png')
+                .expect(200);
+
+            expect(uploadResponse.body).toMatchObject({
+                message: 'Imagem enviada e registro atualizado.'
+            });
+            expect(uploadResponse.body.path).toMatch(/^\/uploads\/stores\//);
         });
     });
 });

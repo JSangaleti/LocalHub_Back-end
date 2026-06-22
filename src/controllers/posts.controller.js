@@ -95,6 +95,7 @@ const postsController = {
           p.title,
           p.description,
           p.image_url AS "imageUrl",
+          s.profile_image_url AS "storeImageUrl",
           p.is_active AS "isActive",
           ${engagementSelect(userIdParsed, 'PARAM')}
         FROM posts p
@@ -245,6 +246,7 @@ const postsController = {
             p.title,
             p.description,
             p.image_url AS "imageUrl",
+            s.profile_image_url AS "storeImageUrl",
             p.is_active AS "isActive",
             ${engagementSelect(userIdParsed, userIdParsed ? 2 : 0)}
           FROM posts p

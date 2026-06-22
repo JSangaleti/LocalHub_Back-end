@@ -95,6 +95,124 @@ const usersController = {
     }
   },
 
+  getFavoriteStores: async (req, res) => {
+    try {
+      const userId = parsePositiveInteger(req.params.id);
+      if (!userId) {
+        return res.status(400).json({ message: 'ID de usuário inválido.' });
+      }
+
+      const userResult = await pool.query('SELECT 1 FROM users WHERE id = $1', [userId]);
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ message: 'Usuário não encontrado.' });
+      }
+
+      const { rows } = await pool.query(
+        `
+          SELECT
+            s.id,
+            s.owner_user_id AS "ownerUserId",
+            s.category_id AS "categoryId",
+            s.name,
+            s.description,
+            c.name AS category,
+            s.address,
+            s.opening_hours AS "openingHours",
+            s.contact,
+            s.profile_image_url AS "profileImageUrl",
+            s.is_active AS "isActive"
+          FROM favorite_stores fs
+          JOIN stores s ON s.id = fs.store_id
+          LEFT JOIN categories c ON c.id = s.category_id
+          WHERE fs.user_id = $1
+          ORDER BY fs.created_at DESC
+        `,
+        [userId]
+      );
+
+      return res.status(200).json(rows);
+    } catch (error) {
+      return res.status(500).json({
+        message: 'Erro ao listar lojas favoritas.',
+        error: error.message
+      });
+    }
+  },
+
+  addFavoriteStore: async (req, res) => {
+    try {
+      const userId = parsePositiveInteger(req.params.id);
+      const storeId = parsePositiveInteger(req.params.storeId);
+      if (!userId || !storeId) {
+        return res.status(400).json({ message: 'ID de usuário ou loja inválido.' });
+      }
+
+      const { rows } = await pool.query(
+        `
+          INSERT INTO favorite_stores (user_id, store_id)
+          SELECT $1, $2
+          WHERE EXISTS (SELECT 1 FROM users WHERE id = $1)
+            AND EXISTS (SELECT 1 FROM stores WHERE id = $2)
+          ON CONFLICT (user_id, store_id) DO NOTHING
+          RETURNING user_id, store_id
+        `,
+        [userId, storeId]
+      );
+
+      if (rows.length > 0) {
+        return res.status(201).json({ message: 'Loja adicionada aos favoritos.' });
+      }
+
+      const existing = await pool.query(
+        `
+          SELECT
+            EXISTS (SELECT 1 FROM users WHERE id = $1) AS "userExists",
+            EXISTS (SELECT 1 FROM stores WHERE id = $2) AS "storeExists"
+        `,
+        [userId, storeId]
+      );
+
+      if (!existing.rows[0].userExists || !existing.rows[0].storeExists) {
+        return res.status(404).json({ message: 'Usuário ou loja não encontrado.' });
+      }
+
+      return res.status(200).json({ message: 'Loja já está nos favoritos.' });
+    } catch (error) {
+      return res.status(500).json({
+        message: 'Erro ao favoritar loja.',
+        error: error.message
+      });
+    }
+  },
+
+  removeFavoriteStore: async (req, res) => {
+    try {
+      const userId = parsePositiveInteger(req.params.id);
+      const storeId = parsePositiveInteger(req.params.storeId);
+      if (!userId || !storeId) {
+        return res.status(400).json({ message: 'ID de usuário ou loja inválido.' });
+      }
+
+      const { rows } = await pool.query(
+        `DELETE FROM favorite_stores
+         WHERE user_id = $1 AND store_id = $2
+         RETURNING user_id`,
+        [userId, storeId]
+      );
+
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'Loja não estava nos favoritos.' });
+      }
+
+      return res.status(200).json({ message: 'Loja removida dos favoritos.' });
+    } catch (error) {
+      return res.status(500).json({
+        message: 'Erro ao remover loja dos favoritos.',
+        error: error.message
+      });
+    }
+  },
+
   update: async (req, res) => {
     try {
       const id = parsePositiveInteger(req.params.id);

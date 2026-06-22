@@ -4,7 +4,11 @@ const pool = require('../config/db');
 
 const ALLOWED_TYPES = new Set(['posts', 'stores', 'users']);
 
-const TABLE_MAP = { posts: 'posts', stores: 'stores', users: 'users' };
+const UPLOAD_TARGETS = {
+  posts: { table: 'posts', imageColumn: 'image_url' },
+  stores: { table: 'stores', imageColumn: 'profile_image_url' },
+  users: { table: 'users', imageColumn: 'image_url' }
+};
 
 const parsePositiveInteger = (value) => {
   const parsed = Number.parseInt(value, 10);
@@ -64,10 +68,11 @@ const upload = async (req, res) => {
       return res.status(400).json({ message: 'ID inválido.' });
     }
 
-    const table = TABLE_MAP[type];
+    const target = UPLOAD_TARGETS[type];
+    const { table, imageColumn } = target;
 
     const { rows: existing } = await pool.query(
-      `SELECT image_url FROM ${table} WHERE id = $1`,
+      `SELECT ${imageColumn} AS image_url FROM ${table} WHERE id = $1`,
       [id]
     );
 
@@ -86,7 +91,7 @@ const upload = async (req, res) => {
 
     // Atualiza o banco
     const { rows } = await pool.query(
-      `UPDATE ${table} SET image_url = $1 WHERE id = $2 RETURNING id`,
+      `UPDATE ${table} SET ${imageColumn} = $1 WHERE id = $2 RETURNING id`,
       [webPath, id]
     );
 

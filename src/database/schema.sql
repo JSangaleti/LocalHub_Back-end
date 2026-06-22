@@ -51,6 +51,14 @@ CREATE TABLE IF NOT EXISTS stores (
   is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- Lojas favoritadas por cada usuário
+CREATE TABLE IF NOT EXISTS favorite_stores (
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  store_id BIGINT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, store_id)
+);
+
 -- Tabela: posts
 -- id, store_id, category_id, title, description, image_url,
 CREATE TABLE IF NOT EXISTS posts (
@@ -67,6 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_stores_owner_user_id ON stores(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_stores_category_id ON stores(category_id);
 CREATE INDEX IF NOT EXISTS idx_posts_store_id ON posts(store_id);
+CREATE INDEX IF NOT EXISTS idx_favorite_stores_store_id ON favorite_stores(store_id);
 
 -- Tabela: post_likes (curtida por usuário em post)
 CREATE TABLE IF NOT EXISTS post_likes (

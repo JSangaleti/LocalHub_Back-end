@@ -26,6 +26,8 @@ services:
       DB_NAME: localhubdb
     ports:
       - "3000:3000"
+    volumes:
+      - ./uploads:/app/uploads
     command: npm run start
 volumes:
   postgres_data:

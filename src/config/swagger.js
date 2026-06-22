@@ -19,6 +19,7 @@ const options = {
             { name: 'Health', description: 'Verificação de funcionamento da API' },
             { name: 'Auth', description: 'Autenticação de usuários' },
             { name: 'Users', description: 'Gerenciamento de usuários' },
+            { name: 'Favorites', description: 'Lojas favoritas dos usuários' },
             { name: 'Categories', description: 'Gerenciamento de categorias' },
             { name: 'Stores', description: 'Gerenciamento de lojas' },
             { name: 'Posts', description: 'Gerenciamento de posts' },
@@ -102,6 +103,15 @@ const options = {
                     properties: {
                         message: { type: 'string', example: 'Usuário atualizado com sucesso.' },
                         user: { $ref: '#/components/schemas/User' }
+                    }
+                },
+                FavoriteStoreResponse: {
+                    type: 'object',
+                    properties: {
+                        message: {
+                            type: 'string',
+                            example: 'Loja adicionada aos favoritos.'
+                        }
                     }
                 },
 

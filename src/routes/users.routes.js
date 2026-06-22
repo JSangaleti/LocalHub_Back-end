@@ -25,6 +25,113 @@ router.get('/', usersController.getAll);
 
 /**
  * @swagger
+ * /api/users/{id}/favorite-stores:
+ *   get:
+ *     summary: Lista as lojas favoritas de um usuário
+ *     tags: [Favorites]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do usuário
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: Lojas favoritas retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Store'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/:id/favorite-stores', usersController.getFavoriteStores);
+
+/**
+ * @swagger
+ * /api/users/{id}/favorite-stores/{storeId}:
+ *   post:
+ *     summary: Adiciona uma loja aos favoritos do usuário
+ *     tags: [Favorites]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do usuário
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *       - in: path
+ *         name: storeId
+ *         required: true
+ *         description: ID da loja
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       201:
+ *         description: Loja adicionada aos favoritos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FavoriteStoreResponse'
+ *       200:
+ *         description: A loja já estava nos favoritos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FavoriteStoreResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *   delete:
+ *     summary: Remove uma loja dos favoritos do usuário
+ *     tags: [Favorites]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do usuário
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *       - in: path
+ *         name: storeId
+ *         required: true
+ *         description: ID da loja
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: Loja removida dos favoritos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FavoriteStoreResponse'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.post('/:id/favorite-stores/:storeId', usersController.addFavoriteStore);
+router.delete('/:id/favorite-stores/:storeId', usersController.removeFavoriteStore);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Busca um usuário pelo ID
