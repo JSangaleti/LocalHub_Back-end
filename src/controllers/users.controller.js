@@ -38,6 +38,7 @@ const usersController = {
             name,
             email,
             user_type AS "userType",
+            image_url AS "profileImageUrl",
             created_at AS "createdAt",
             updated_at AS "updatedAt"
           FROM users
@@ -70,6 +71,7 @@ const usersController = {
             name,
             email,
             user_type AS "userType",
+            image_url AS "profileImageUrl",
             created_at AS "createdAt",
             updated_at AS "updatedAt"
           FROM users
@@ -163,6 +165,7 @@ const usersController = {
             name,
             email,
             user_type AS "userType",
+            image_url AS "profileImageUrl",
             created_at AS "createdAt",
             updated_at AS "updatedAt"
         `,
