@@ -132,6 +132,88 @@ router.delete('/:id/favorite-stores/:storeId', usersController.removeFavoriteSto
 
 /**
  * @swagger
+ * /api/users/{id}/saved-posts:
+ *   get:
+ *     summary: Lista os IDs dos posts salvos pelo usuário
+ *     tags: [Favorites]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de IDs retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: integer
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *
+ * /api/users/{id}/saved-posts/{postId}:
+ *   post:
+ *     summary: Salva um post para o usuário
+ *     tags: [Favorites]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       201:
+ *         description: Post salvo com sucesso
+ *       200:
+ *         description: Post já estava salvo
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ *   delete:
+ *     summary: Remove um post dos salvos do usuário
+ *     tags: [Favorites]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Post removido dos salvos
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/:id/saved-posts', usersController.getSavedPosts);
+router.post('/:id/saved-posts/:postId', usersController.addSavedPost);
+router.delete('/:id/saved-posts/:postId', usersController.removeSavedPost);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Busca um usuário pelo ID

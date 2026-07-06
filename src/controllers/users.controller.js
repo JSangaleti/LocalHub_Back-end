@@ -213,6 +213,91 @@ const usersController = {
     }
   },
 
+  getSavedPosts: async (req, res) => {
+    try {
+      const userId = parsePositiveInteger(req.params.id);
+      if (!userId) {
+        return res.status(400).json({ message: 'ID de usuário inválido.' });
+      }
+
+      const userResult = await pool.query('SELECT 1 FROM users WHERE id = $1', [userId]);
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ message: 'Usuário não encontrado.' });
+      }
+
+      const { rows } = await pool.query(
+        `SELECT post_id AS "postId" FROM saved_posts WHERE user_id = $1 ORDER BY created_at DESC`,
+        [userId]
+      );
+
+      return res.status(200).json(rows.map((r) => r.postId));
+    } catch (error) {
+      return res.status(500).json({ message: 'Erro ao listar posts salvos.', error: error.message });
+    }
+  },
+
+  addSavedPost: async (req, res) => {
+    try {
+      const userId = parsePositiveInteger(req.params.id);
+      const postId = parsePositiveInteger(req.params.postId);
+      if (!userId || !postId) {
+        return res.status(400).json({ message: 'ID de usuário ou post inválido.' });
+      }
+
+      const { rows } = await pool.query(
+        `INSERT INTO saved_posts (user_id, post_id)
+         SELECT $1, $2
+         WHERE EXISTS (SELECT 1 FROM users WHERE id = $1)
+           AND EXISTS (SELECT 1 FROM posts WHERE id = $2)
+         ON CONFLICT (user_id, post_id) DO NOTHING
+         RETURNING user_id`,
+        [userId, postId]
+      );
+
+      if (rows.length > 0) {
+        return res.status(201).json({ message: 'Post salvo com sucesso.' });
+      }
+
+      const existing = await pool.query(
+        `SELECT
+           EXISTS (SELECT 1 FROM users WHERE id = $1) AS "userExists",
+           EXISTS (SELECT 1 FROM posts WHERE id = $2) AS "postExists"`,
+        [userId, postId]
+      );
+
+      if (!existing.rows[0].userExists || !existing.rows[0].postExists) {
+        return res.status(404).json({ message: 'Usuário ou post não encontrado.' });
+      }
+
+      return res.status(200).json({ message: 'Post já estava salvo.' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Erro ao salvar post.', error: error.message });
+    }
+  },
+
+  removeSavedPost: async (req, res) => {
+    try {
+      const userId = parsePositiveInteger(req.params.id);
+      const postId = parsePositiveInteger(req.params.postId);
+      if (!userId || !postId) {
+        return res.status(400).json({ message: 'ID de usuário ou post inválido.' });
+      }
+
+      const { rows } = await pool.query(
+        `DELETE FROM saved_posts WHERE user_id = $1 AND post_id = $2 RETURNING user_id`,
+        [userId, postId]
+      );
+
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'Post não estava salvo.' });
+      }
+
+      return res.status(200).json({ message: 'Post removido dos salvos.' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Erro ao remover post salvo.', error: error.message });
+    }
+  },
+
   update: async (req, res) => {
     try {
       const id = parsePositiveInteger(req.params.id);
